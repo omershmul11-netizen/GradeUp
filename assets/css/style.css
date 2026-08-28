@@ -1,0 +1,335 @@
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: Arial, sans-serif;
+}
+
+body {
+    direction: rtl;
+    background: linear-gradient(180deg, #f3f6fb 0%, #e9eef7 100%);
+    min-height: 100vh;
+    color: #1f2a44;
+}
+
+.page-wrapper {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 20px;
+}
+
+.main-card {
+    width: 100%;
+    max-width: 760px;
+    background: #ffffff;
+    border-radius: 24px;
+    box-shadow: 0 12px 35px rgba(0, 0, 0, 0.08);
+    padding: 36px;
+    border: 1px solid #e6ebf3;
+    position: relative;
+}
+
+.top-badge {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    background: #0b66c3;
+    color: #fff;
+    padding: 10px 16px;
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: bold;
+}
+
+.title {
+    font-size: 28px;
+    font-weight: bold;
+    margin-bottom: 6px;
+    color: #0b66c3;
+}
+
+.subtitle {
+    font-size: 15px;
+    color: #616e88;
+    margin-bottom: 28px;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: bold;
+    color: #3a4763;
+    font-size: 15px;
+}
+
+.form-group select {
+    width: 100%;
+    padding: 14px 16px;
+    border: 2px solid #e6ebf3;
+    border-radius: 14px;
+    background: #f8faff;
+    font-size: 16px;
+    color: #1f2a44;
+    outline: none;
+    transition: 0.2s ease;
+}
+
+.form-group select:focus {
+    border-color: #0b66c3;
+    background: #fff;
+}
+
+.primary-btn {
+    width: 100%;
+    background: #0b66c3;
+    color: #fff;
+    border: none;
+    border-radius: 14px;
+    padding: 16px;
+    font-size: 18px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: 0.2s ease;
+    margin-top: 8px;
+}
+
+.primary-btn:hover {
+    background: #0955a2;
+}
+
+.loading {
+    margin-top: 22px;
+    color: #0b66c3;
+    font-weight: bold;
+    font-size: 16px;
+}
+
+.message {
+    margin-top: 22px;
+    padding: 14px 16px;
+    border-radius: 12px;
+    font-size: 15px;
+}
+
+.message.error {
+    background: #fdeaea;
+    color: #9c2323;
+    border: 1px solid #f3c0c0;
+}
+
+.message.success {
+    background: #edf9ef;
+    color: #237432;
+    border: 1px solid #bce6c5;
+}
+
+.results-section {
+    margin-top: 32px;
+    border-top: 1px solid #e6ebf3;
+    padding-top: 28px;
+}
+
+.results-section h2 {
+    font-size: 20px;
+    font-weight: bold;
+    margin-bottom: 16px;
+    color: #1f2a44;
+}
+
+.students-container {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.student-card {
+    background: #f8faff;
+    border: 1px solid #e6ebf3;
+    border-radius: 14px;
+    padding: 16px 20px;
+    transition: 0.2s ease;
+}
+
+.student-card:hover {
+    border-color: #0b66c3;
+    background: #fff;
+}
+
+.student-name {
+    font-size: 17px;
+    font-weight: bold;
+    color: #1f2a44;
+    margin-bottom: 8px;
+}
+
+.student-details {
+    font-size: 14px;
+    color: #52627a;
+    line-height: 1.5;
+}
+
+.hidden {
+    display: none;
+}
+
+
+@import url('https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;700&display=swap');
+
+/* החלת הגופן רוביק וצבע הרקע האפרסקי לכל האלמנטים תחת הדף המשודרג */
+body.gradeup-page, 
+body.gradeup-page * {
+    font-family: 'Rubik', sans-serif !important;
+}
+
+body.gradeup-page {
+    background: #fcdbd1 !important; /* צבע הרקע המדויק מהמוקאפ */
+}
+
+/* שדרוג הקארד המרכזי שייראה כמו נייר עבודה רך */
+body.gradeup-page .main-card {
+    max-width: 860px; /* הרחבה קלה כדי לאפשר פריסת גריד נוחה לתלמידים */
+    border-radius: 24px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.04);
+    border: 1px solid rgba(0, 0, 0, 0.02);
+    padding: 40px;
+}
+
+/* צבעי הכותרות בעיצוב החדש */
+body.gradeup-page .title {
+    color: #2d3748;
+    font-size: 30px;
+}
+
+body.gradeup-page .subtitle {
+    color: #718096;
+}
+
+/* שדרוג שדות הבחירה (Select) למראה נקי ועגול */
+body.gradeup-page .form-group select {
+    background: #ffffff;
+    border: 1px solid #cbd5e1;
+    border-radius: 12px;
+    color: #2d3748;
+    padding: 12px 16px;
+}
+
+body.gradeup-page .form-group select:focus {
+    border-color: #8fa3db;
+    box-shadow: 0 0 0 3px rgba(143, 163, 219, 0.2);
+}
+
+/* שדרוג הכפתור והתגית לצבע הכחול-סגול הייחודי מהמוקאפ עם הצללה תלת-ממדית */
+body.gradeup-page .primary-btn,
+body.gradeup-page .top-badge {
+    background: #8fa3db !important; /* הגוון המדויק של הכפתורים במוקאפ שלך */
+    color: #ffffff;
+}
+
+body.gradeup-page .top-badge {
+    border-radius: 12px;
+    padding: 8px 16px;
+    box-shadow: 0 4px 10px rgba(143, 163, 219, 0.3);
+}
+
+body.gradeup-page .primary-btn {
+    border-radius: 12px;
+    font-size: 16px;
+    font-weight: 500;
+    padding: 14px;
+    box-shadow: 0 5px 12px rgba(143, 163, 219, 0.5); /* אפקט הצל רך שנותן נפח */
+    transition: all 0.25s ease-in-out;
+}
+
+body.gradeup-page .primary-btn:hover {
+    background: #7b8fc7 !important;
+    box-shadow: 0 8px 18px rgba(143, 163, 219, 0.7);
+    transform: translateY(-1px);
+}
+
+body.gradeup-page .primary-btn:active {
+    transform: translateY(1px);
+}
+
+/* שדרוג הודעות המערכת לקו העיצובי החדש */
+body.gradeup-page .message.error {
+    background: #fff5f5;
+    color: #c53030;
+    border: 1px solid #fed7d7;
+}
+
+body.gradeup-page .message.success {
+    background: #f0fff4;
+    color: #2f855a;
+    border: 1px solid #c6f6d5;
+}
+
+/* הפיכת קו ההפרדה לקו מקווקו בסגנון דף מחברת/גזיר נייר */
+body.gradeup-page .results-section {
+    border-top: 2px dashed #e2e8f0;
+    padding-top: 32px;
+}
+
+body.gradeup-page .results-section h2 {
+    color: #2d3748;
+}
+
+/* שינוי מהותי: הפיכת רשימת התלמידים הטורית לרשת כרטיסים רספונסיבית מודרנית */
+body.gradeup-page .students-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 16px;
+}
+
+/* עיצוב כרטיס תלמיד נקי, בהיר ומזמין (Sticky Note) */
+body.gradeup-page .student-card {
+    background: #fffbf9; /* גוון חמים עדין מאוד לכרטיס */
+    border: 1px solid #edf2f7;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.01);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    transition: all 0.25s ease-in-out;
+}
+
+body.gradeup-page .student-card:hover {
+    transform: translateY(-3px);
+    background: #ffffff;
+    border-color: #8fa3db;
+    box-shadow: 0 8px 20px rgba(143, 163, 219, 0.15);
+}
+
+body.gradeup-page .student-name {
+    color: #2d3748;
+    font-size: 18px;
+    border-bottom: 2px solid #f7fafc;
+    padding-bottom: 6px;
+    margin-bottom: 12px;
+    transition: all 0.25s ease-in-out;
+}
+
+body.gradeup-page .student-card:hover .student-name {
+    color: #8fa3db;
+    border-color: #8fa3db;
+}
+
+/* סידור פנים-כרטיס: יישור כותרות לימין וערכים לשמאל ליצירת סדר מופתי בעין */
+body.gradeup-page .student-details div {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 6px;
+    color: #4a5568;
+}
+
+body.gradeup-page .student-details strong {
+    color: #718096;
+    font-weight: 400; /* הפיכת המילים 'כיתה:' או 'ציון:' לפחות מודגשות כדי שהערך יבלוט */
+}

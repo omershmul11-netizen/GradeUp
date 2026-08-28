@@ -1,0 +1,35 @@
+services:
+  web:
+    build: .
+    ports:
+      - "8080:80"
+    environment:
+      DB_HOST: db
+      DB_NAME: gradeup
+      DB_USER: gradeup
+      DB_PASS: gradeup_demo_password
+      DB_CHARSET: utf8mb4
+      MAIL_FROM_NAME: GradeUp
+    depends_on:
+      db:
+        condition: service_healthy
+
+  db:
+    image: mysql:8.0
+    environment:
+      MYSQL_DATABASE: gradeup
+      MYSQL_USER: gradeup
+      MYSQL_PASSWORD: gradeup_demo_password
+      MYSQL_ROOT_PASSWORD: gradeup_root_demo_password
+    volumes:
+      - gradeup_db:/var/lib/mysql
+      - ./database/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+      - ./database/demo_seed.sql:/docker-entrypoint-initdb.d/02-demo-seed.sql:ro
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-pgradeup_root_demo_password"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+volumes:
+  gradeup_db:
