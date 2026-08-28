@@ -379,8 +379,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </div>
 
         <div class="login-footer">
-            <a href="https://omersh2.mtacloud.co.il/student_login.php" class="secondary-link">🧑‍🎓 כניסת תלמידים</a>
-            <a href="https://omersh2.mtacloud.co.il/teacher_login.php" class="secondary-link">🔑 כניסת מורים</a>
+            <a href="student_login.php" class="secondary-link">🧑‍🎓 כניסת תלמידים</a>
+            <a href="teacher_login.php" class="secondary-link">🔑 כניסת מורים</a>
         </div>
 
     </div>
