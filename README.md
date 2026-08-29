@@ -47,7 +47,7 @@ docker compose up --build
 
 Then open [http://localhost:8080/login.php](http://localhost:8080/login.php).
 
-The first start creates a clean database and adds synthetic demo accounts:
+The first start creates a complete synthetic school dataset: 24 students, five teachers, four subjects, active tutoring groups, an assignment, attendance history, and demo accounts:
 
 | Role | Login page | Username | Password |
 | --- | --- | --- | --- |
@@ -66,7 +66,15 @@ docker compose up --build
 
 ## Configuration
 
-Core role and database workflows run in the Docker demo without external API keys. AI generation and email delivery are optional integrations.
+Core role and database workflows run in the Docker demo without external API keys. Smart grouping always has a deterministic local fallback. Email events are safely recorded in the in-app demo outbox so reviewers can inspect the complete communication workflow without sending real messages.
+
+To enable optional AI features locally, copy the environment template and keep the real key only in the ignored local file:
+
+```bash
+cp .env.example .env.local
+```
+
+The Docker demo loads `.env.local` at runtime but excludes it from the image and Git. With a private `OPENAI_API_KEY`, grouping and assignment suggestions use the OpenAI Responses API. Without one, the rest of the portfolio demo remains fully usable.
 
 For a traditional PHP deployment, copy the local configuration template and fill it privately:
 
@@ -82,6 +90,7 @@ cp config.local.example.php config.local.php
 | `OPENAI_API_KEY` | AI assignment and grouping features |
 | `BREVO_API_KEY` | Transactional email delivery |
 | `MAIL_FROM_EMAIL`, `MAIL_FROM_NAME` | Email sender identity |
+| `GRADEUP_DEMO_MODE` | Records notifications in the in-app outbox instead of sending them |
 
 Import `database/schema.sql` for a clean production database. `database/demo_seed.sql` contains only synthetic local-demo data.
 

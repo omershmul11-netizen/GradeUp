@@ -21,6 +21,8 @@ $countStmt->execute();
 $countRow = $countStmt->fetch(PDO::FETCH_ASSOC);
 
 $totalGroupsCount = (int)($countRow['total_groups'] ?? 0);
+
+$outboxCount = (int) $pdo->query('SELECT COUNT(*) FROM email_outbox')->fetchColumn();
 ?>
 <!DOCTYPE html>
 <html lang="he" dir="rtl">
@@ -388,6 +390,14 @@ $totalGroupsCount = (int)($countRow['total_groups'] ?? 0);
                         צפייה בהגשות התלמידים, סטטוס ביצוע המשימות והציונים שהתקבלו במערכת.
                     </p>
                     <a class="btn gray" href="assignment_results.php">צפייה ומעקב הגשות תלמידים</a>
+                </div>
+
+                <div class="card">
+                    <h2>הודעות מערכת</h2>
+                    <p class="note">
+                        צפייה בהודעות שנוצרו בעקבות שיבוצים, משימות ודיווחי נוכחות. במצב הדגמה ההודעות נשמרות בבטחה במערכת.
+                    </p>
+                    <a class="btn" href="email_outbox.php">צפייה בתיבת ההודעות (<?= $outboxCount ?>)</a>
                 </div>
 
             </div>

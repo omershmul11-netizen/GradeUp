@@ -74,6 +74,10 @@ function sendGradeUpEmail($toEmail, $toName, $subject, $htmlBody) {
         return false;
     }
 
+    if (gradeup_mail_demo_enabled()) {
+        return gradeup_record_demo_email($toEmail, $toName, $subject, $htmlBody);
+    }
+
     if (
         !defined('BREVO_API_KEY') || trim(BREVO_API_KEY) === '' ||
         !defined('MAIL_FROM_EMAIL') || trim(MAIL_FROM_EMAIL) === '' ||

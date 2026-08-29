@@ -3,12 +3,17 @@ services:
     build: .
     ports:
       - "8080:80"
+    env_file:
+      - path: .env.local
+        required: false
     environment:
       DB_HOST: db
       DB_NAME: gradeup
       DB_USER: gradeup
       DB_PASS: gradeup_demo_password
       DB_CHARSET: utf8mb4
+      GRADEUP_DEMO_MODE: "1"
+      MAIL_FROM_EMAIL: demo@gradeup.local
       MAIL_FROM_NAME: GradeUp
     depends_on:
       db:

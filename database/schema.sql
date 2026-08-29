@@ -129,6 +129,20 @@ CREATE TABLE `coordinators` (
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
+-- --------------------------------------------------------
+
+-- Demo-safe and auditable email delivery log.
+CREATE TABLE `email_outbox` (
+  `email_id` int NOT NULL,
+  `recipient_email` varchar(150) NOT NULL,
+  `recipient_name` varchar(150) DEFAULT NULL,
+  `subject` varchar(255) NOT NULL,
+  `html_body` longtext NOT NULL,
+  `delivery_mode` enum('demo','brevo') NOT NULL DEFAULT 'demo',
+  `status` enum('simulated','sent','failed') NOT NULL DEFAULT 'simulated',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
 --
 -- הוצאת מידע עבור טבלה `coordinators`
 --
@@ -401,6 +415,11 @@ ALTER TABLE `coordinators`
   ADD PRIMARY KEY (`coordinator_id`),
   ADD UNIQUE KEY `email` (`email`);
 
+ALTER TABLE `email_outbox`
+  ADD PRIMARY KEY (`email_id`),
+  ADD KEY `created_at` (`created_at`),
+  ADD KEY `status` (`status`);
+
 --
 -- אינדקסים לטבלה `parents`
 --
@@ -512,6 +531,9 @@ ALTER TABLE `assignment_submissions`
 --
 ALTER TABLE `coordinators`
   MODIFY `coordinator_id` int NOT NULL AUTO_INCREMENT;
+
+ALTER TABLE `email_outbox`
+  MODIFY `email_id` int NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `parents`
