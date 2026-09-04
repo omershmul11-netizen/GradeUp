@@ -34,6 +34,11 @@ CREATE TABLE `assignments` (
   `description` text NOT NULL,
   `due_date` date DEFAULT NULL,
   `created_by` varchar(100) DEFAULT NULL,
+  `assignment_type` varchar(30) NOT NULL DEFAULT 'legacy_mcq',
+  `worksheet_pdf_path` varchar(500) DEFAULT NULL,
+  `worksheet_preview_path` varchar(500) DEFAULT NULL,
+  `curriculum_topic_id` varchar(80) DEFAULT NULL,
+  `curriculum_subtopic_id` varchar(80) DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
@@ -217,6 +222,7 @@ CREATE TABLE `student_subject_grades` (
   `grade_id` int NOT NULL,
   `student_id` int DEFAULT NULL,
   `subject_id` int DEFAULT NULL,
+  `study_units` tinyint DEFAULT NULL,
   `latest_grade` int DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
@@ -287,6 +293,7 @@ CREATE TABLE `tutoring_groups` (
   `group_id` int NOT NULL,
   `subject_id` int DEFAULT NULL,
   `grade_level` varchar(10) DEFAULT NULL,
+  `study_units` tinyint DEFAULT NULL,
   `teacher_id` int DEFAULT NULL,
   `day_of_week` varchar(20) DEFAULT NULL,
   `start_time` time DEFAULT NULL,

@@ -35,6 +35,7 @@ set_exception_handler(function ($e) {
 
 require_once "../db_config.php";
 require_once "../openai_config.php";
+require_once "../bagrut471/curriculum_catalog.php";
 
 if (!defined('OPENAI_API_KEY') || trim(OPENAI_API_KEY) === '') {
     safe_json_exit([
@@ -659,6 +660,7 @@ $stmt = $pdo->prepare("
     SELECT 
         tg.group_id,
         tg.grade_level,
+        tg.study_units,
         s.subject_name,
         CONCAT(t.first_name, ' ', t.last_name) AS teacher_name
     FROM tutoring_groups tg
@@ -684,18 +686,44 @@ if (!$group) {
 $gradeLevel = (int)$group['grade_level'];
 $subjectHebrew = subject_to_hebrew_name($group['subject_name']);
 $gradeText = grade_to_hebrew_text($gradeLevel);
+$studyUnits = isset($group['study_units']) ? (int)$group['study_units'] : null;
+$groupCatalog = gradeup_curriculum_for_group($group['subject_name'], $gradeLevel, $studyUnits);
+$curriculumSelection = null;
 
-$curriculumCheck = validate_topic_against_curriculum($subjectHebrew, $gradeLevel, $topic);
+if ($groupCatalog) {
+    $topicId = trim((string)($data['curriculum_topic_id'] ?? ''));
+    $subtopicId = trim((string)($data['curriculum_subtopic_id'] ?? ''));
+    $curriculumSelection = gradeup_curriculum_selection($groupCatalog, $topicId, $subtopicId);
 
-if (!$curriculumCheck['success']) {
-    safe_json_exit([
-        "success" => false,
-        "message" => $curriculumCheck['message']
-    ]);
+    if (!$curriculumSelection) {
+        safe_json_exit([
+            "success" => false,
+            "message" => "יש לבחור נושא ותת־נושא מתוך תוכנית י״א 4 יח״ל."
+        ]);
+    }
+
+    $topic = $curriculumSelection['display_name'];
+    $matchedTopic = $topic;
+    $allCatalogSubtopics = [];
+    foreach ($groupCatalog['topics'] as $catalogTopic) {
+        foreach ($catalogTopic['subtopics'] as $subtopicName) {
+            $allCatalogSubtopics[] = $catalogTopic['name'] . ' — ' . $subtopicName;
+        }
+    }
+    $curriculumTopicsText = implode(', ', $allCatalogSubtopics);
+} else {
+    $curriculumCheck = validate_topic_against_curriculum($subjectHebrew, $gradeLevel, $topic);
+
+    if (!$curriculumCheck['success']) {
+        safe_json_exit([
+            "success" => false,
+            "message" => $curriculumCheck['message']
+        ]);
+    }
+
+    $matchedTopic = $curriculumCheck['matched_topic'];
+    $curriculumTopicsText = build_curriculum_topics_text($subjectHebrew, $gradeLevel);
 }
-
-$matchedTopic = $curriculumCheck['matched_topic'];
-$curriculumTopicsText = build_curriculum_topics_text($subjectHebrew, $gradeLevel);
 
 $subjectInstruction = "";
 
@@ -925,6 +953,7 @@ safe_json_exit([
         "grade_level" => $gradeLevel,
         "subject_name" => $subjectHebrew,
         "topic" => $topic,
+        "curriculum_selection" => $curriculumSelection,
         "matched_curriculum_topic" => $matchedTopic
     ],
     "suggestions" => array_slice($cleanSuggestions, 0, 3)

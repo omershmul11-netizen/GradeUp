@@ -12,6 +12,7 @@ if (file_exists($openaiConfigPath)) {
 
 $gradeLevel = isset($_GET["grade_level"]) ? (int)$_GET["grade_level"] : 0;
 $subjectId = isset($_GET["subject_id"]) ? (int)$_GET["subject_id"] : 0;
+$studyUnits = isset($_GET["study_units"]) ? (int)$_GET["study_units"] : 0;
 $shuffleSeed = isset($_GET["shuffle"]) ? (int)$_GET["shuffle"] : 0;
 
 if (!$gradeLevel || !$subjectId) {
@@ -621,11 +622,27 @@ try {
 
     $subjectNameRaw = $subjectRow["subject_name"];
     $subjectName = subjectToHebrew($subjectNameRaw);
+    $isMath = $subjectName === 'מתמטיקה';
+
+    if ($isMath && !in_array($studyUnits, [3, 4, 5], true)) {
+        echo json_encode([
+            "success" => false,
+            "message" => "יש לבחור רמת לימוד של 3, 4 או 5 יחידות למתמטיקה"
+        ], JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+
+    if (!$isMath) {
+        $studyUnits = null;
+    }
 
     /*
         שליפת תלמידים בטווח 60-70 לפי שכבה ומקצוע.
         תלמיד שכבר משובץ לקבוצה מאושרת באותו מקצוע לא ישובץ שוב לאותו מקצוע.
     */
+    $studyUnitsGradeFilter = $isMath ? " AND g.study_units = :study_units" : "";
+    $studyUnitsGroupFilter = $isMath ? " AND tg.study_units = :study_units_exclude" : "";
+
     $stmt = $pdo->prepare("
         SELECT 
             s.student_id,
@@ -639,22 +656,31 @@ try {
         INNER JOIN student_subject_grades g ON s.student_id = g.student_id
         WHERE s.grade_level = :grade_level
           AND g.subject_id = :subject_id
+          {$studyUnitsGradeFilter}
           AND g.latest_grade BETWEEN 60 AND 70
           AND s.student_id NOT IN (
                 SELECT tgs.student_id
                 FROM tutoring_group_students tgs
                 INNER JOIN tutoring_groups tg ON tgs.group_id = tg.group_id
                 WHERE tg.subject_id = :subject_id_exclude
+                  {$studyUnitsGroupFilter}
                   AND tg.status = 'approved'
           )
         ORDER BY g.latest_grade ASC, s.class_name ASC, s.last_name ASC, s.first_name ASC
     ");
 
-    $stmt->execute([
+    $studentQueryParams = [
         ":grade_level" => $gradeLevel,
         ":subject_id" => $subjectId,
         ":subject_id_exclude" => $subjectId
-    ]);
+    ];
+
+    if ($isMath) {
+        $studentQueryParams[":study_units"] = $studyUnits;
+        $studentQueryParams[":study_units_exclude"] = $studyUnits;
+    }
+
+    $stmt->execute($studentQueryParams);
 
     $students = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
@@ -855,6 +881,7 @@ try {
         "grade_level" => $gradeLevel,
         "subject_id" => $subjectId,
         "subject_name" => $subjectName,
+        "study_units" => $studyUnits,
         "total_students" => $studentCount,
         "group_count" => $groupCount,
         "shuffle_seed" => $shuffleSeed,

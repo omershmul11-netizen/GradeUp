@@ -21,6 +21,9 @@ SELECT
     a.description,
     a.due_date,
     a.created_at,
+    a.assignment_type,
+    a.worksheet_pdf_path,
+    a.worksheet_preview_path,
     s.subject_name,
     tg.grade_level,
     CONCAT(t.first_name, ' ', t.last_name) AS teacher_name,
@@ -419,7 +422,7 @@ $assignments = $stmt->fetchAll(PDO::FETCH_ASSOC);
             <?php else: ?>
                 <div class="assignment-list">
                     <?php foreach($assignments as $assignment): ?>
-                        <div class="assignment-card" id="assignment_card_<?= $assignment['assignment_id'] ?>" onclick="selectAssignment(<?= $assignment['assignment_id'] ?>)">
+                        <div class="assignment-card" id="assignment_card_<?= $assignment['assignment_id'] ?>" <?= $assignment['assignment_type'] === 'worksheet_pdf' ? '' : 'onclick="selectAssignment(' . (int)$assignment['assignment_id'] . ')"' ?>>
                             <h3><?= htmlspecialchars($assignment['title']) ?></h3>
                             <div class="meta">
                                 מקצוע: <strong><?= htmlspecialchars($assignment['subject_name']) ?></strong><br>
@@ -427,7 +430,12 @@ $assignments = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                 הגשה עד: <?= htmlspecialchars($assignment['due_date'] ?? 'לא הוגדר') ?>
                             </div>
 
-                            <?php if (!empty($assignment['submission_status'])): ?>
+                            <?php if ($assignment['assignment_type'] === 'worksheet_pdf'): ?>
+                                <div class="status-open">דף עבודה פתוח להדפסה ולפתרון</div>
+                                <a class="btn" href="<?= htmlspecialchars($assignment['worksheet_pdf_path']) ?>" target="_blank" rel="noopener" style="display:block; text-align:center; margin-top:12px; text-decoration:none;">
+                                    פתח דף עבודה PDF
+                                </a>
+                            <?php elseif (!empty($assignment['submission_status'])): ?>
                                 <div class="status-done">
                                     ✅ הוגש | ציון: <?= htmlspecialchars($assignment['ai_score']) ?>
                                 </div>

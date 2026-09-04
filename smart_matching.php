@@ -452,11 +452,21 @@ $subjects = $subjectsStmt->fetchAll(PDO::FETCH_ASSOC);
                         $displayName = $subjectNamesHebrew[$sub['subject_name']] ?? $sub['subject_name'];
                         ?>
 
-                        <option value="<?= htmlspecialchars($sub['subject_id']) ?>">
+                        <option value="<?= htmlspecialchars($sub['subject_id']) ?>" data-is-math="<?= $displayName === 'מתמטיקה' ? '1' : '0' ?>">
                             <?= htmlspecialchars($displayName) ?>
                         </option>
                     <?php endforeach; ?>
                 </select>
+
+                <div id="studyUnitsField" style="display:none;">
+                    <label>מספר יחידות במתמטיקה <span class="required">*</span></label>
+                    <select id="studyUnitsSelect">
+                        <option value="">-- בחר רמת לימוד --</option>
+                        <option value="3">3 יח״ל</option>
+                        <option value="4">4 יח״ל</option>
+                        <option value="5">5 יח״ל</option>
+                    </select>
+                </div>
 
                 <button class="btn" id="runBtn" onclick="runMatching(false)">
                     התחל שיבוץ
@@ -475,7 +485,7 @@ $subjects = $subjectsStmt->fetchAll(PDO::FETCH_ASSOC);
             <h3>כללי שיבוץ AI</h3>
 
             <p style="font-size: 13px; color:#718096; line-height:1.6;">
-                השיבוץ מתבצע לפי שכבה ומקצוע בלבד.
+                השיבוץ מתבצע לפי שכבה ומקצוע, ובמתמטיקה גם לפי מספר יחידות הלימוד.
                 המערכת שואפת ליצור קבוצות של 8–10 תלמידים,
                 לא לשבץ תלמיד באותה שעה בשתי קבוצות,
                 ולא לעבור שני תגבורים ביום לתלמיד.
@@ -491,6 +501,24 @@ $subjects = $subjectsStmt->fetchAll(PDO::FETCH_ASSOC);
 <script>
 let currentPreview = null;
 let shuffleCounter = 0;
+
+function updateStudyUnitsVisibility() {
+    const subjectSelect = document.getElementById('subjectSelect');
+    const selectedOption = subjectSelect.options[subjectSelect.selectedIndex];
+    const isMath = selectedOption?.dataset.isMath === '1';
+    const field = document.getElementById('studyUnitsField');
+    const unitsSelect = document.getElementById('studyUnitsSelect');
+
+    field.style.display = isMath ? 'block' : 'none';
+    unitsSelect.required = isMath;
+
+    if (!isMath) {
+        unitsSelect.value = '';
+    }
+}
+
+document.getElementById('subjectSelect').addEventListener('change', updateStudyUnitsVisibility);
+updateStudyUnitsVisibility();
 
 function showMessage(text, type) {
     const msgBox = document.getElementById('msgBox');
@@ -523,9 +551,17 @@ function dayToHebrew(day) {
 async function runMatching(isReshuffle) {
     const grade = document.getElementById('gradeSelect').value;
     const subjectId = document.getElementById('subjectSelect').value;
+    const subjectOption = document.getElementById('subjectSelect').selectedOptions[0];
+    const isMath = subjectOption?.dataset.isMath === '1';
+    const studyUnits = document.getElementById('studyUnitsSelect').value;
 
     if (!grade || !subjectId) {
         alert('יש לבחור גם שכבה וגם מקצוע');
+        return;
+    }
+
+    if (isMath && !studyUnits) {
+        alert('יש לבחור גם מספר יחידות במתמטיקה');
         return;
     }
 
@@ -546,7 +582,7 @@ async function runMatching(isReshuffle) {
 
     try {
         const response = await fetch(
-            `api_preview_smart_groups.php?grade_level=${encodeURIComponent(grade)}&subject_id=${encodeURIComponent(subjectId)}&shuffle=${shuffleSeed}`
+            `api_preview_smart_groups.php?grade_level=${encodeURIComponent(grade)}&subject_id=${encodeURIComponent(subjectId)}&study_units=${encodeURIComponent(studyUnits)}&shuffle=${shuffleSeed}`
         );
 
         const result = await response.json();

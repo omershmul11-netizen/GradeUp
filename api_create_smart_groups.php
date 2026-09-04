@@ -263,6 +263,7 @@ if (!$input || !isset($input["groups"], $input["grade_level"], $input["subject_i
 
 $gradeLevel = (int)$input["grade_level"];
 $subjectId = (int)$input["subject_id"];
+$studyUnits = isset($input["study_units"]) ? (int)$input["study_units"] : 0;
 $groups = $input["groups"];
 
 try {
@@ -294,6 +295,15 @@ try {
     $subjectNameRaw = $subjectRow["subject_name"];
     $subjectName = subjectToHebrew($subjectNameRaw);
     $gradeText = gradeToHebrew($gradeLevel);
+    $isMath = $subjectName === 'מתמטיקה';
+
+    if ($isMath && !in_array($studyUnits, [3, 4, 5], true)) {
+        throw new Exception("יש לבחור רמת לימוד תקינה למתמטיקה.");
+    }
+
+    if (!$isMath) {
+        $studyUnits = null;
+    }
 
     /*
         איסוף כל המורים והתלמידים מהשיבוץ לצורך בדיקת התנגשויות לפני שמירה.
@@ -319,6 +329,35 @@ try {
             if ($studentId > 0) {
                 $allStudentIds[$studentId] = $studentId;
             }
+        }
+    }
+
+    /*
+        אימות שרת: כל תלמיד חייב להשתייך לשכבה, למקצוע ולרמת היחידות שנבחרו.
+        כך אי אפשר לעקוף את הסינון שבמסך התצוגה המקדימה.
+    */
+    if (count($allStudentIds) > 0) {
+        $studentPlaceholders = implode(",", array_fill(0, count($allStudentIds), "?"));
+        $unitsClause = $isMath ? " AND ssg.study_units = ?" : "";
+        $eligibilityStmt = $pdo->prepare("
+            SELECT COUNT(DISTINCT s.student_id)
+            FROM students s
+            INNER JOIN student_subject_grades ssg ON ssg.student_id = s.student_id
+            WHERE s.student_id IN ($studentPlaceholders)
+              AND s.grade_level = ?
+              AND ssg.subject_id = ?
+              {$unitsClause}
+        ");
+        $eligibilityParams = array_values($allStudentIds);
+        $eligibilityParams[] = $gradeLevel;
+        $eligibilityParams[] = $subjectId;
+        if ($isMath) {
+            $eligibilityParams[] = $studyUnits;
+        }
+        $eligibilityStmt->execute($eligibilityParams);
+
+        if ((int)$eligibilityStmt->fetchColumn() !== count($allStudentIds)) {
+            throw new Exception("אחד התלמידים אינו תואם לשכבה, למקצוע או לרמת היחידות של הקבוצה.");
         }
     }
 
@@ -459,14 +498,15 @@ try {
         */
         $insertGroup = $pdo->prepare("
             INSERT INTO tutoring_groups 
-            (subject_id, grade_level, teacher_id, day_of_week, start_time, end_time, status)
+            (subject_id, grade_level, study_units, teacher_id, day_of_week, start_time, end_time, status)
             VALUES
-            (:subject_id, :grade_level, :teacher_id, :day_of_week, :start_time, :end_time, :status)
+            (:subject_id, :grade_level, :study_units, :teacher_id, :day_of_week, :start_time, :end_time, :status)
         ");
 
         $insertGroup->execute([
             ":subject_id" => $subjectId,
             ":grade_level" => $gradeLevel,
+            ":study_units" => $studyUnits,
             ":teacher_id" => $teacherId,
             ":day_of_week" => $dayOfWeek,
             ":start_time" => $startTime,

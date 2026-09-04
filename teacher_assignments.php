@@ -7,6 +7,7 @@ if (!isset($_SESSION['teacher_id'])) {
 }
 
 require_once 'db_config.php';
+require_once __DIR__ . '/bagrut471/curriculum_catalog.php';
 
 $teacherId = (int)$_SESSION['teacher_id'];
 $teacherName = $_SESSION['teacher_name'] ?? 'מורה';
@@ -19,6 +20,7 @@ SELECT
     tg.group_id,
     s.subject_name,
     tg.grade_level,
+    tg.study_units,
     tg.day_of_week,
     tg.start_time,
     tg.end_time,
@@ -35,6 +37,7 @@ $stmt->execute([
 ]);
 
 $groups = $stmt->fetchAll(PDO::FETCH_ASSOC);
+$curriculumCatalog = gradeup_curriculum_catalog();
 
 $assignmentsQuery = "
 SELECT 
@@ -43,6 +46,8 @@ SELECT
     a.description,
     a.due_date,
     a.created_at,
+    a.assignment_type,
+    a.worksheet_pdf_path,
     s.subject_name,
     tg.grade_level,
     COUNT(q.question_id) AS question_count
@@ -57,6 +62,8 @@ GROUP BY
     a.description,
     a.due_date,
     a.created_at,
+    a.assignment_type,
+    a.worksheet_pdf_path,
     s.subject_name,
     tg.grade_level
 ORDER BY a.assignment_id DESC
@@ -323,6 +330,47 @@ $assignments = $stmtAssignments->fetchAll(PDO::FETCH_ASSOC);
             white-space: normal;
         }
 
+        .bagrut-results {
+            display: none;
+            margin-top: 18px;
+            gap: 18px;
+        }
+
+        .bagrut-file-card {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 14px;
+            padding: 14px;
+        }
+
+        .bagrut-file-card h3 {
+            margin-bottom: 10px;
+            font-size: 15px;
+        }
+
+        .bagrut-preview {
+            display: block;
+            width: 100%;
+            max-height: 540px;
+            object-fit: contain;
+            background: #ffffff;
+            border: 1px solid #edf2f7;
+            margin-bottom: 12px;
+        }
+
+        .bagrut-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .bagrut-actions a {
+            flex: 1;
+            min-width: 150px;
+            text-align: center;
+            text-decoration: none;
+        }
+
         .question-preview-label {
             margin-top: 10px;
             font-size: 12px;
@@ -448,7 +496,7 @@ $assignments = $stmtAssignments->fetchAll(PDO::FETCH_ASSOC);
 
     <div class="hero">
         <h1>משימות AI ודפי עבודה</h1>
-        <p>שלום <?= htmlspecialchars($teacherName) ?>, כאן ניתן ליצור דפי עבודה אוטומטיים מבוססי AI, לערוך אותם ולאשר לפני שליחה לתלמידים.</p>
+        <p>שלום <?= htmlspecialchars($teacherName) ?>, כאן יוצרים דף עבודה אחד המותאם ליחידת הלימוד, לנושא ולתת־הנושא של הקבוצה.</p>
     </div>
 
     <?php if (count($groups) === 0): ?>
@@ -458,38 +506,55 @@ $assignments = $stmtAssignments->fetchAll(PDO::FETCH_ASSOC);
     <?php else: ?>
 
         <div class="card">
-            <h2>יצירת משימה לפי נושא</h2>
+            <h2>יצירת דף עבודה לקבוצה</h2>
+            <p style="font-size:13px; color:#718096; text-align:center; line-height:1.6; margin-bottom:12px;">
+                בוחרים קבוצה, נושא ותת־נושא ומקבלים דף עבודה אחד ברמת הבגרות.
+            </p>
 
             <label>בחר קבוצת תגבור</label>
             <select id="groupId">
                 <option value="">-- בחר קבוצה --</option>
                 <?php foreach($groups as $group): ?>
-                    <option value="<?= $group['group_id'] ?>" <?= $prefillGroupId === (int)$group['group_id'] ? 'selected' : '' ?>>
-                        קבוצה <?= $group['group_id'] ?> | <?= htmlspecialchars($group['subject_name']) ?> | שכבה <?= htmlspecialchars($group['grade_level']) ?>
+                    <option
+                        value="<?= $group['group_id'] ?>"
+                        data-subject="<?= htmlspecialchars($group['subject_name']) ?>"
+                        data-grade="<?= htmlspecialchars($group['grade_level']) ?>"
+                        data-study-units="<?= htmlspecialchars((string)($group['study_units'] ?? '')) ?>"
+                        <?= $prefillGroupId === (int)$group['group_id'] ? 'selected' : '' ?>
+                    >
+                        קבוצה <?= $group['group_id'] ?> | <?= htmlspecialchars($group['subject_name']) ?> | שכבה <?= htmlspecialchars($group['grade_level']) ?><?= !empty($group['study_units']) ? ' | ' . (int)$group['study_units'] . ' יח״ל' : '' ?>
                     </option>
                 <?php endforeach; ?>
             </select>
 
-            <label>נושא השיעור</label>
-            <input type="text" id="topic" placeholder="למשל: משוואות ליניאריות / פיתגורס" value="<?= htmlspecialchars($prefillTopic) ?>">
+            <div id="learningUnitInfo" style="display:none; margin-top:14px; padding:12px 14px; background:#f7fafc; border:1px solid #e2e8f0; border-radius:12px; font-size:13px;"></div>
+
+            <div id="curriculumFields" style="display:none;">
+                <label>נושא לבגרות</label>
+                <select id="curriculumTopic">
+                    <option value="">-- בחר נושא מרכזי --</option>
+                </select>
+
+                <label>תת־נושא בדרך לרמת בגרות</label>
+                <select id="curriculumSubtopic" disabled>
+                    <option value="">-- תחילה בחר נושא מרכזי --</option>
+                </select>
+                <p style="font-size:12px; color:#718096; margin-top:7px; line-height:1.5;">
+                    הנושאים ותתי־הנושאים נגזרו מחוברת תוכנית הלימודים לי״א 4 יח״ל.
+                </p>
+            </div>
+
+            <input type="hidden" id="topic" value="<?= htmlspecialchars($prefillTopic) ?>">
+            <p id="catalogUnavailableNote" style="display:none; font-size:12px; color:#b45309; margin-top:12px; line-height:1.5;">
+                יצירת דפי עבודה זמינה כרגע לקבוצות מתמטיקה י״א 4 יח״ל. בהמשך יתווספו יחידות לימוד נוספות.
+            </p>
 
             <label>תאריך הגשה אחרון</label>
             <input type="date" id="dueDate">
 
-            <button class="btn" onclick="generateSuggestions()">צור הצעות AI לדפי עבודה</button>
+            <button class="btn" id="generateWorksheetButton" onclick="generateUnifiedWorksheet()">צור דף עבודה אחד</button>
             <div id="message" class="message"></div>
-        </div>
-
-        <div class="card" id="suggestionsCard" style="display:none;">
-            <h2>הצעות AI לבחירתך</h2>
-            <p style="font-size:12px; color:#718096; text-align:center; margin-bottom:10px;">
-                בחר הצעה, ערוך את השאלות והתשובות במידת הצורך, ורק לאחר מכן שמור ושלח לתלמידים.
-            </p>
-
-            <div class="proposal-grid" id="proposalGrid"></div>
-            <div class="questions-box" id="questionsBox"></div>
-
-            <button class="btn" onclick="saveSelectedAssignment()">שמור ושלח את הגרסה הערוכה לקבוצה</button>
+            <div id="worksheetResult" class="bagrut-results"></div>
         </div>
 
     <?php endif; ?>
@@ -506,7 +571,7 @@ $assignments = $stmtAssignments->fetchAll(PDO::FETCH_ASSOC);
                         <th>מקצוע</th>
                         <th>שכבה</th>
                         <th>כותרת</th>
-                        <th>שאלות</th>
+                        <th>סוג</th>
                         <th>תאריך הגשה</th>
                     </tr>
                     <?php foreach($assignments as $assignment): ?>
@@ -515,7 +580,7 @@ $assignments = $stmtAssignments->fetchAll(PDO::FETCH_ASSOC);
                             <td><?= htmlspecialchars($assignment['subject_name']) ?></td>
                             <td>שכבה <?= htmlspecialchars($assignment['grade_level']) ?></td>
                             <td><?= htmlspecialchars($assignment['title']) ?></td>
-                            <td><strong><?= htmlspecialchars($assignment['question_count']) ?></strong></td>
+                            <td><strong><?= $assignment['assignment_type'] === 'worksheet_pdf' ? 'PDF' : htmlspecialchars($assignment['question_count']) ?></strong></td>
                             <td><?= htmlspecialchars($assignment['due_date']) ?></td>
                         </tr>
                     <?php endforeach; ?>
@@ -532,6 +597,199 @@ let selectedAssignment = null;
 let selectedAssignmentIndex = null;
 
 const createdBy = <?= json_encode($_SESSION['teacher_username'] ?? 'teacher', JSON_UNESCAPED_UNICODE) ?>;
+const curriculumCatalog = <?= json_encode($curriculumCatalog, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?>;
+
+function getSelectedGroupCatalog() {
+    const groupSelect = document.getElementById('groupId');
+    if (!groupSelect) return null;
+    const option = groupSelect.options[groupSelect.selectedIndex];
+
+    if (!option || !option.value) {
+        return null;
+    }
+
+    const subject = String(option.dataset.subject || '').trim().toLowerCase();
+    const isMath = ['math', 'mathematics', 'מתמטיקה'].includes(subject);
+    const key = isMath
+        ? `math-${Number(option.dataset.grade)}-${Number(option.dataset.studyUnits)}`
+        : '';
+
+    return curriculumCatalog[key] || null;
+}
+
+function updateTopicValue() {
+    const catalog = getSelectedGroupCatalog();
+    const topicSelect = document.getElementById('curriculumTopic');
+    const subtopicSelect = document.getElementById('curriculumSubtopic');
+    const topicInput = document.getElementById('topic');
+
+    if (!catalog || !topicSelect.value || !subtopicSelect.value) {
+        if (catalog) topicInput.value = '';
+        return;
+    }
+
+    topicInput.value = `${catalog.topics[topicSelect.value].name} — ${catalog.topics[topicSelect.value].subtopics[subtopicSelect.value]}`;
+}
+
+function populateSubtopics() {
+    const catalog = getSelectedGroupCatalog();
+    const topicSelect = document.getElementById('curriculumTopic');
+    const subtopicSelect = document.getElementById('curriculumSubtopic');
+    const topic = catalog?.topics?.[topicSelect.value];
+
+    subtopicSelect.innerHTML = '<option value="">-- בחר תת־נושא --</option>';
+    subtopicSelect.disabled = !topic;
+
+    if (topic) {
+        Object.entries(topic.subtopics).forEach(([id, name]) => {
+            subtopicSelect.add(new Option(name, id));
+        });
+    }
+
+    updateTopicValue();
+}
+
+function updateCurriculumFields() {
+    const groupSelect = document.getElementById('groupId');
+    if (!groupSelect) return;
+    const hasSelectedGroup = Boolean(groupSelect.value);
+    const catalog = getSelectedGroupCatalog();
+    const curriculumFields = document.getElementById('curriculumFields');
+    const note = document.getElementById('catalogUnavailableNote');
+    const topicSelect = document.getElementById('curriculumTopic');
+    const subtopicSelect = document.getElementById('curriculumSubtopic');
+    const generateButton = document.getElementById('generateWorksheetButton');
+    const unitInfo = document.getElementById('learningUnitInfo');
+    const selectedOption = groupSelect.options[groupSelect.selectedIndex];
+
+    curriculumFields.style.display = catalog ? 'block' : 'none';
+    note.style.display = !catalog && hasSelectedGroup ? 'block' : 'none';
+    generateButton.disabled = !catalog;
+    unitInfo.style.display = hasSelectedGroup ? 'block' : 'none';
+    unitInfo.innerHTML = hasSelectedGroup
+        ? `<strong>יחידת לימוד:</strong> ${Number(selectedOption.dataset.studyUnits) || 'לא הוגדרה'} יח״ל | <strong>שכבה:</strong> ${escapeHtml(selectedOption.dataset.grade || '')}`
+        : '';
+    document.getElementById('worksheetResult').innerHTML = '';
+    document.getElementById('worksheetResult').style.display = 'none';
+
+    topicSelect.innerHTML = '<option value="">-- בחר נושא מרכזי --</option>';
+    subtopicSelect.innerHTML = '<option value="">-- תחילה בחר נושא מרכזי --</option>';
+    subtopicSelect.disabled = true;
+
+    if (catalog) {
+        document.getElementById('topic').value = '';
+        Object.entries(catalog.topics).forEach(([id, topic]) => {
+            const hours = topic.hours ? ` (${topic.hours} שעות בתוכנית)` : '';
+            topicSelect.add(new Option(topic.name + hours, id));
+        });
+    }
+}
+
+if (document.getElementById('groupId')) {
+    document.getElementById('groupId').addEventListener('change', updateCurriculumFields);
+    document.getElementById('curriculumTopic').addEventListener('change', populateSubtopics);
+    document.getElementById('curriculumSubtopic').addEventListener('change', updateTopicValue);
+    updateCurriculumFields();
+}
+
+let generatedWorksheet = null;
+
+async function generateUnifiedWorksheet(){
+    const groupId = document.getElementById('groupId').value;
+    const topicId = document.getElementById('curriculumTopic').value;
+    const subtopicId = document.getElementById('curriculumSubtopic').value;
+    const dueDate = document.getElementById('dueDate').value;
+    const results = document.getElementById('worksheetResult');
+
+    if (!groupId) {
+        alert('יש לבחור קבוצת תגבור.');
+        return;
+    }
+    if (!getSelectedGroupCatalog()) {
+        alert('יצירת דף עבודה זמינה כרגע למתמטיקה י״א 4 יח״ל.');
+        return;
+    }
+    if (!topicId || !subtopicId) {
+        alert('יש לבחור נושא ותת־נושא.');
+        return;
+    }
+    if (!dueDate) {
+        alert('יש לבחור תאריך הגשה.');
+        return;
+    }
+
+    generatedWorksheet = null;
+    results.innerHTML = '';
+    results.style.display = 'none';
+    showMessage('יוצר דף עבודה אחד ובודק את המבנה המתמטי ואת קובץ ה־PDF...', 'info');
+
+    try {
+        const response = await fetch('api/generate_worksheet.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                group_id: groupId,
+                curriculum_topic_id: topicId,
+                curriculum_subtopic_id: subtopicId
+            })
+        });
+        const raw = await response.text();
+        let payload;
+        try {
+            payload = JSON.parse(raw);
+        } catch (error) {
+            throw new Error('השרת לא החזיר תשובה תקינה.');
+        }
+        if (!response.ok || !payload.success) {
+            throw new Error(payload.message || 'יצירת דף העבודה נכשלה.');
+        }
+
+        const file = payload.file || payload.files?.[0];
+        if (!file) throw new Error('לא התקבל קובץ דף עבודה.');
+        generatedWorksheet = {
+            ...file,
+            curriculum_selection: payload.curriculum_selection,
+            group_id: groupId,
+            due_date: dueDate
+        };
+
+        results.innerHTML = `
+            <div class="bagrut-file-card">
+                <h3>${escapeHtml(file.title || 'דף עבודה')}</h3>
+                <img class="bagrut-preview" src="${escapeHtml(file.preview_url)}" alt="תצוגה מקדימה של דף העבודה">
+                <div class="bagrut-actions">
+                    <a class="btn secondary" href="${escapeHtml(file.pdf_url)}" target="_blank" rel="noopener">פתח PDF</a>
+                    <a class="btn" href="${escapeHtml(file.pdf_url)}" download>הורד PDF</a>
+                </div>
+                <button class="btn" type="button" onclick="saveGeneratedWorksheet()">אשר ושייך את דף העבודה לקבוצה</button>
+            </div>
+        `;
+        results.style.display = 'grid';
+        showMessage('דף עבודה אחד נוצר בהצלחה. בדוק אותו ולאחר מכן אשר את השיוך לקבוצה.', 'success');
+        results.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    } catch (error) {
+        showMessage(error.message || 'אירעה שגיאה ביצירת דף העבודה.', 'error');
+    }
+}
+
+async function saveGeneratedWorksheet(){
+    if (!generatedWorksheet) return;
+    try {
+        const response = await fetch('api/save_generated_worksheet.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(generatedWorksheet)
+        });
+        const payload = await response.json();
+        if (!response.ok || !payload.success) {
+            throw new Error(payload.message || 'שמירת דף העבודה נכשלה.');
+        }
+        showMessage('דף העבודה נשמר ושויך לקבוצה בהצלחה.', 'success');
+        setTimeout(() => location.reload(), 900);
+    } catch (error) {
+        showMessage(error.message || 'אירעה שגיאה בשמירת דף העבודה.', 'error');
+    }
+}
 
 function showMessage(text, type){
     const msg = document.getElementById('message');
@@ -630,7 +888,7 @@ async function generateSuggestions(){
     const topic = document.getElementById('topic').value.trim();
 
     if(!groupId){ alert('יש לבחור קבוצת תגבור'); return; }
-    if(!topic){ alert('יש להזין נושא שיעור'); return; }
+    if(!topic){ alert(getSelectedGroupCatalog() ? 'יש לבחור נושא ותת־נושא' : 'יש להזין נושא שיעור'); return; }
 
     generatedSuggestions = [];
     selectedAssignment = null;
@@ -646,7 +904,12 @@ async function generateSuggestions(){
         const response = await fetch('api/generate_assignment_suggestions.php', {
             method:'POST',
             headers:{ 'Content-Type':'application/json' },
-            body:JSON.stringify({ group_id:groupId, topic:topic })
+            body:JSON.stringify({
+                group_id: groupId,
+                topic: topic,
+                curriculum_topic_id: document.getElementById('curriculumTopic').value,
+                curriculum_subtopic_id: document.getElementById('curriculumSubtopic').value
+            })
         });
 
         const rawText = await response.text();

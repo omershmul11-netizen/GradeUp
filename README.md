@@ -94,6 +94,11 @@ cp config.local.example.php config.local.php
 
 Import `database/schema.sql` for a clean production database. `database/demo_seed.sql` contains only synthetic local-demo data.
 
+For an existing database created before the study-unit curriculum update, run
+`database/20260901_add_study_units.sql` once before deploying the updated PHP files.
+For an existing database created before the unified PDF worksheet flow, also run
+`database/20260904_unified_worksheet.sql` once.
+
 ## Project structure
 
 ```text

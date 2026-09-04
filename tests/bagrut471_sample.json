@@ -1,0 +1,43 @@
+{
+  "questions": [
+    {
+      "id": "qa-rational-parameter",
+      "title": "חקירה רציונלית עם פרמטר",
+      "question_number": 6,
+      "formula": {
+        "type": "row",
+        "children": [
+          {"type": "text", "value": "f(x)="},
+          {
+            "type": "frac",
+            "numerator": {
+              "type": "row",
+              "children": [
+                {"type": "sup", "base": {"type": "text", "value": "x"}, "exponent": {"type": "text", "value": "2"}},
+                {"type": "text", "value": "−6x+a"}
+              ]
+            },
+            "denominator": {"type": "sup", "base": {"type": "text", "value": "(x−2)"}, "exponent": {"type": "text", "value": "2"}}
+          },
+          {"type": "text", "value": "."}
+        ]
+      },
+      "elements": [
+        {"type": "paragraph", "parts": [{"kind": "he", "text": "a הוא פרמטר."}], "after": 5},
+        {"type": "item", "label": "א.", "parts": [{"kind": "he", "text": "מצאו את תחום ההגדרה של הפונקציה "}, {"kind": "math", "text": "f(x)"}, {"kind": "he", "text": "."}], "after": 6},
+        {"type": "paragraph", "parts": [{"kind": "he", "text": "נתון כי לגרף הפונקציה "}, {"kind": "math", "text": "f(x)"}, {"kind": "he", "text": " יש נקודת קיצון בנקודה שבה "}, {"kind": "math", "text": "x = 4"}, {"kind": "he", "text": "."}], "after": 4},
+        {"type": "item", "label": "ב.", "parts": [{"kind": "he", "text": "מצאו את הערך של "}, {"kind": "math", "text": "a"}, {"kind": "he", "text": "."}], "after": 6},
+        {"type": "paragraph", "parts": [{"kind": "he", "text": "הציבו "}, {"kind": "math", "text": "a = 10"}, {"kind": "he", "text": " בפונקציה וענו על הסעיפים ג-ה."}], "bold": true, "after": 7},
+        {"type": "item", "label": "ג. (1)", "parts": [{"kind": "he", "text": "מצאו את נקודות החיתוך של גרף הפונקציה עם הצירים, אם יש כאלה."}], "after": 3},
+        {"type": "item", "label": "(2)", "parts": [{"kind": "he", "text": "מצאו את נקודת הקיצון וקבעו את סוגה."}], "after": 3},
+        {"type": "item", "label": "(3)", "parts": [{"kind": "he", "text": "מצאו את תחומי העלייה והירידה של הפונקציה."}], "after": 3},
+        {"type": "item", "label": "(4)", "parts": [{"kind": "he", "text": "מצאו את משוואות האסימפטוטות המאונכות לצירים."}], "after": 6},
+        {"type": "item", "label": "ד.", "parts": [{"kind": "he", "text": "סרטטו סקיצה של גרף הפונקציה."}], "after": 8},
+        {"type": "paragraph", "parts": [{"kind": "he", "text": "נתונה הפונקציה "}, {"kind": "math", "text": "g(x) = f(2x)"}, {"kind": "he", "text": "."}], "after": 5},
+        {"type": "item", "label": "ה. (1)", "parts": [{"kind": "he", "text": "מצאו את תחום ההגדרה של הפונקציה "}, {"kind": "math", "text": "g(x)"}, {"kind": "he", "text": "."}], "after": 3},
+        {"type": "item", "label": "(2)", "parts": [{"kind": "he", "text": "מצאו את האסימפטוטות של הפונקציה "}, {"kind": "math", "text": "g(x)"}, {"kind": "he", "text": "."}], "after": 3},
+        {"type": "item", "label": "(3)", "parts": [{"kind": "he", "text": "מצאו את נקודת הקיצון של הפונקציה וקבעו את סוגה. אין צורך לגזור."}], "after": 2}
+      ]
+    }
+  ]
+}

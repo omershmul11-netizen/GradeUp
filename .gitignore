@@ -8,11 +8,14 @@ config.local.php
 *.log
 logs/
 tmp/
+generated/
 
 # Local tooling
 .DS_Store
 .idea/
 .vscode/
+__pycache__/
+*.pyc
 
 # Local archives and database exports
 *.zip
