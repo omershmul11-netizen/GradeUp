@@ -148,19 +148,94 @@ function bagrut_build_prompt($skillText, $selection, $previousError = '') {
     $topic = $selection['topic_name'];
     $subtopic = $selection['subtopic_name'];
     $topicId = $selection['topic_id'];
+    $hours = (int)($selection['hours'] ?? 0);
     $domainRules = [
         'statistics-probability' => 'השתמש רק בתכני החוברת: ממוצע וסטיית תקן, ציוני תקן, התפלגות נורמלית והטבלה המצטברת, קשר בין משתנים, דיאגרמת פיזור, מקדם מתאם וישר רגרסיה. אל תכניס הסתברות מותנית או דיאגרמת עץ כנושא עצמאי. מותר להשתמש בטבלת נתונים באמצעות data_table.',
         'geometry' => 'השתמש רק בתכני החוברת: מעגל, מיתרים וקשתות, זוויות מרכזיות והיקפיות, משיקים, משולש ומרובע חסומים, משולש חוסם מעגל, משפט הסינוסים, שטחים, משוואת מעגל, מצב הדדי בין מעגל לישר ומשיק אנליטי. שלב בין אוקלידית, אנליטית וטריגונומטריה כשזה מתאים. אל תפנה לסרטוט שאינו מופיע בדף.',
         'calculus' => 'השתמש רק בתכני החוברת: קדם־אנליזה, פונקציות רציונליות ושורש, נגזרות, משיקים, אסימפטוטות, נקודות קיצון, זוגיות, קשר פונקציה־נגזרת, פרמטר יחיד, שאלות קיצון, פונקציה קדומה, אינטגרל מסוים ושטחים. נגזרת שנייה מחוץ לתוכנית ואסורה.',
     ][$topicId];
+    if (($selection['generation_mode'] ?? 'practice_worksheet') !== 'summary_question') {
+        return <<<PROMPT
+אתה מחולל דפי העבודה הרשמי של GradeUp. פעל לפי תקני התוכן והעיצוב המצורפים.
+
+{$skillText}
+
+בקשה:
+- צור דף עבודה מדורג אחד לתת־הנושא: {$subtopic}.
+- הנושא הראשי: {$topic}. הקצאת ההוראה לתת־הנושא: {$hours} שעות.
+- יעד: 4 יחידות, כיתה י״א.
+- זהו דף תרגול של מיומנות, לא שאלת בגרות מלאה ולא חקירה אחת ארוכה.
+- בנה 8–12 תרגילים קצרים ומגוונים בארבעה מקטעים: בסיס, תרגול, מתקדם ויישום.
+- כל תרגיל יכוון למיומנות ברורה מתוך תת־הנושא. העלייה בקושי תהיה הדרגתית.
+- מקטע היישום משלב את המיומנות בתוך הקשר בגרות קצר, אך אינו הופך לשאלה מלאה על כל הנושא.
+- אין שאלות אמריקאיות, אין שלוש חלופות ואין פתרונות בדף התלמיד.
+- הקצה 1–5 שורות עבודה לכל תרגיל לפי אורך הפתרון הצפוי.
+- {$domainRules}
+- בטקסט הגלוי השתמש בסימון מתמטי מודפס בלבד: √ ולא sqrt, וחזקות רגילות ולא **.
+- בצע פתרון מלא ובדיקת נכונות באופן פרטי בשדה private_validation בלבד.
+{$retryText}
+
+החזר JSON בלבד. אין Markdown.
+
+המבנה המחייב:
+{
+  "questions": [
+    {
+      "id": "gradeup-worksheet-unique-latin-id",
+      "document_type": "practice_worksheet",
+      "title": "{$subtopic}",
+      "topic_label": "{$topic}",
+      "unit_label": "י״א | 4 יח״ל",
+      "difficulty_label": "מדורג: בסיס עד יישום",
+      "instructions": "פתרו לפי הסדר והציגו דרך.",
+      "sections": [
+        {
+          "title": "חלק א — בסיס",
+          "instruction": "חימום וזיהוי המיומנות",
+          "exercises": [
+            {
+              "number": 1,
+              "parts": [{"kind":"he","text":"הוראה קצרה"}],
+              "formula": FORMULA_NODE או null,
+              "workspace_lines": 2
+            }
+          ]
+        }
+      ],
+      "private_validation": {
+        "skill_map": "המיומנות המדויקת שכל תרגיל משרת",
+        "solution_outline": "פתרון פרטי מלא לכל התרגילים",
+        "final_checks": "אימות הדרגתיות, נכונות והתאמה לתת־הנושא"
+      }
+    }
+  ]
+}
+
+חובה להחזיר בדיוק ארבעה sections ובסדר הבא:
+1. חלק א — בסיס
+2. חלק ב — תרגול
+3. חלק ג — מתקדם
+4. חלק ד — יישום
+
+FORMULA_NODE הוא אחד מהבאים בלבד:
+- {"type":"text","value":"f(x)=..."}
+- {"type":"row","children":[FORMULA_NODE,...]}
+- {"type":"sup","base":FORMULA_NODE,"exponent":FORMULA_NODE}
+- {"type":"frac","numerator":FORMULA_NODE,"denominator":FORMULA_NODE}
+- {"type":"sqrt","value":FORMULA_NODE}
+
+בנה נוסחאות באמצעות row, frac, sup ו-sqrt. חלק עברי מקבל kind=he ומתמטיקה מקבלת kind=math.
+PROMPT;
+    }
+
     return <<<PROMPT
 אתה מחולל דפי העבודה הרשמי של GradeUp. פעל לפי תקני התוכן והעיצוב המצורפים.
 
 {$skillText}
 
 בקשה:
-- צור דף עבודה אחד בלבד בנושא הראשי: {$topic}.
-- תת־הנושא המחייב: {$subtopic}.
+- צור שאלת סיכום מלאה אחת בלבד בנושא הראשי: {$topic}.
+- תת־הנושא המחייב הוא שאלת הסיכום: {$subtopic}.
 - יעד: 4 יחידות, כיתה י״א, רמת בגרות.
 - הדף מכיל שאלה פתוחה אחת, קוהרנטית ומדורגת, עם סעיפים. אין שאלות אמריקאיות ואין חלופות לבחירה.
 - הדף נכנס לעמוד A4 יחיד ואינו כולל פתרון או תשובות.
@@ -178,7 +253,8 @@ function bagrut_build_prompt($skillText, $selection, $previousError = '') {
   "questions": [
     {
       "id": "gradeup-worksheet-unique-latin-id",
-      "title": "דף עבודה — {$subtopic}",
+      "document_type": "summary_question",
+      "title": "שאלת סיכום — {$subtopic}",
       "question_number": 1,
       "formula": FORMULA_NODE או null,
       "intro_parts": [{"kind":"he","text":"..."},{"kind":"math","text":"..."}],
@@ -235,7 +311,59 @@ function bagrut_visible_payload($payload, $expectedCount) {
         throw new RuntimeException('מספר השאלות שהוחזר אינו תואם לבקשה.');
     }
     foreach ($payload['questions'] as &$question) {
-        if (empty($question['elements']) || empty($question['private_validation'])) {
+        if (empty($question['private_validation'])) {
+            throw new RuntimeException('חסרה בדיקה פרטית.');
+        }
+        $documentType = (string)($question['document_type'] ?? 'summary_question');
+        if ($documentType === 'practice_worksheet') {
+            $sections = $question['sections'] ?? null;
+            if (!is_array($sections) || count($sections) !== 4) {
+                throw new RuntimeException('דף עבודה חייב להכיל ארבעה מקטעים מדורגים.');
+            }
+            $expectedTitles = ['חלק א — בסיס', 'חלק ב — תרגול', 'חלק ג — מתקדם', 'חלק ד — יישום'];
+            $exerciseCount = 0;
+            foreach ($sections as $index => $section) {
+                if (($section['title'] ?? '') !== $expectedTitles[$index]) {
+                    throw new RuntimeException('כותרות מקטעי דף העבודה אינן במבנה המאושר.');
+                }
+                if (empty($section['exercises']) || !is_array($section['exercises'])) {
+                    throw new RuntimeException('מקטע בדף העבודה אינו מכיל תרגילים.');
+                }
+                foreach ($section['exercises'] as $exercise) {
+                    $exerciseCount++;
+                    if ((int)($exercise['number'] ?? 0) !== $exerciseCount) {
+                        throw new RuntimeException('מספור התרגילים בדף העבודה אינו רציף.');
+                    }
+                    $lines = (int)($exercise['workspace_lines'] ?? 0);
+                    if ($lines < 1 || $lines > 5) {
+                        throw new RuntimeException('שטח העבודה לתרגיל אינו בטווח המאושר.');
+                    }
+                    if (empty($exercise['parts']) && empty($exercise['formula'])) {
+                        throw new RuntimeException('נמצא תרגיל ללא תוכן.');
+                    }
+                }
+            }
+            if ($exerciseCount < 8 || $exerciseCount > 12) {
+                throw new RuntimeException('דף עבודה חייב להכיל 8–12 תרגילים.');
+            }
+            $visible = json_encode($sections, JSON_UNESCAPED_UNICODE);
+            foreach (['פתרון', 'תשובה סופית', 'private_validation'] as $forbidden) {
+                if (strpos($visible, $forbidden) !== false) {
+                    throw new RuntimeException('נמצא טקסט פתרון באזור הגלוי.');
+                }
+            }
+            foreach (['sqrt(', '**', 'FORMULA_NODE', 'private_validation'] as $technicalNotation) {
+                if (strpos($visible, $technicalNotation) !== false) {
+                    throw new RuntimeException('נמצא סימון טכני שאינו מתאים לדף עבודה: ' . $technicalNotation);
+                }
+            }
+            unset($question['private_validation']);
+            continue;
+        }
+        if ($documentType !== 'summary_question') {
+            throw new RuntimeException('סוג המסמך אינו נתמך.');
+        }
+        if (empty($question['elements'])) {
             throw new RuntimeException('חסרים סעיפים או בדיקה פרטית.');
         }
         if (empty($question['formula']) && empty($question['intro_parts'])) {

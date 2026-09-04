@@ -1,0 +1,47 @@
+{
+  "questions": [
+    {
+      "id": "worksheet-derivative-rules",
+      "document_type": "practice_worksheet",
+      "title": "נגזרות של פונקציות רציונליות ופונקציות שורש",
+      "topic_label": "פונקציות וחשבון דיפרנציאלי ואינטגרלי",
+      "unit_label": "י״א | 4 יח״ל",
+      "difficulty_label": "מדורג: בסיס עד יישום",
+      "instructions": "פתרו לפי הסדר והציגו דרך.",
+      "sections": [
+        {
+          "title": "חלק א — בסיס",
+          "instruction": "זהו את כלל הגזירה המתאים",
+          "exercises": [
+            {"number": 1, "parts": [{"kind": "he", "text": "גזרו את הפונקציה."}], "formula": {"type": "text", "value": "f(x)=x³−4x"}, "workspace_lines": 2},
+            {"number": 2, "parts": [{"kind": "he", "text": "גזרו את הפונקציה."}], "formula": {"type": "sqrt", "value": {"type": "row", "children": [{"type": "text", "value": "x+3"}]}}, "workspace_lines": 2}
+          ]
+        },
+        {
+          "title": "חלק ב — תרגול",
+          "instruction": "יישמו כלל מכפלה וכלל מנה",
+          "exercises": [
+            {"number": 3, "parts": [{"kind": "he", "text": "גזרו ופשטו."}], "formula": {"type": "text", "value": "f(x)=(x²+1)(x−3)"}, "workspace_lines": 3},
+            {"number": 4, "parts": [{"kind": "he", "text": "גזרו ופשטו."}], "formula": {"type": "frac", "numerator": {"type": "text", "value": "3x−2"}, "denominator": {"type": "text", "value": "x+1"}}, "workspace_lines": 3}
+          ]
+        },
+        {
+          "title": "חלק ג — מתקדם",
+          "instruction": "שלבו תחום ופישוט",
+          "exercises": [
+            {"number": 5, "parts": [{"kind": "he", "text": "מצאו תחום הגדרה וגזרו."}], "formula": {"type": "frac", "numerator": {"type": "text", "value": "x²+4"}, "denominator": {"type": "text", "value": "x"}}, "workspace_lines": 4},
+            {"number": 6, "parts": [{"kind": "he", "text": "גזרו וקבעו היכן הנגזרת מתאפסת."}], "formula": {"type": "text", "value": "f(x)=x√(x+2)"}, "workspace_lines": 4}
+          ]
+        },
+        {
+          "title": "חלק ד — יישום",
+          "instruction": "השתמשו בנגזרת בתוך הקשר קצר",
+          "exercises": [
+            {"number": 7, "parts": [{"kind": "he", "text": "מצאו את שיפוע המשיק בנקודה שבה "}, {"kind": "math", "text": "x=2"}, {"kind": "he", "text": "."}], "formula": {"type": "text", "value": "f(x)=x²/(x+1)"}, "workspace_lines": 4},
+            {"number": 8, "parts": [{"kind": "he", "text": "מצאו את נקודות הקיצון וקבעו את סוגן."}], "formula": {"type": "text", "value": "f(x)=x²(x−3)"}, "workspace_lines": 5}
+          ]
+        }
+      ]
+    }
+  ]
+}

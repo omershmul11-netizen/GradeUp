@@ -508,7 +508,7 @@ $assignments = $stmtAssignments->fetchAll(PDO::FETCH_ASSOC);
         <div class="card">
             <h2>יצירת דף עבודה לקבוצה</h2>
             <p style="font-size:13px; color:#718096; text-align:center; line-height:1.6; margin-bottom:12px;">
-                בוחרים קבוצה, נושא ותת־נושא ומקבלים דף עבודה אחד ברמת הבגרות.
+                תת־נושא יוצר דף עבודה מדורג. רק תת־נושא המסומן "שאלת סיכום" יוצר שאלה מלאה בסגנון בגרות.
             </p>
 
             <label>בחר קבוצת תגבור</label>
@@ -542,6 +542,7 @@ $assignments = $stmtAssignments->fetchAll(PDO::FETCH_ASSOC);
                 <p style="font-size:12px; color:#718096; margin-top:7px; line-height:1.5;">
                     הנושאים ותתי־הנושאים נגזרו מחוברת תוכנית הלימודים לי״א 4 יח״ל.
                 </p>
+                <p id="generationModeNote" style="display:none; font-size:12px; color:#1f4f70; margin-top:7px; line-height:1.5;"></p>
             </div>
 
             <input type="hidden" id="topic" value="<?= htmlspecialchars($prefillTopic) ?>">
@@ -552,7 +553,7 @@ $assignments = $stmtAssignments->fetchAll(PDO::FETCH_ASSOC);
             <label>תאריך הגשה אחרון</label>
             <input type="date" id="dueDate">
 
-            <button class="btn" id="generateWorksheetButton" onclick="generateUnifiedWorksheet()">צור דף עבודה אחד</button>
+            <button class="btn" id="generateWorksheetButton" onclick="generateUnifiedWorksheet()">צור דף עבודה</button>
             <div id="message" class="message"></div>
             <div id="worksheetResult" class="bagrut-results"></div>
         </div>
@@ -625,10 +626,21 @@ function updateTopicValue() {
 
     if (!catalog || !topicSelect.value || !subtopicSelect.value) {
         if (catalog) topicInput.value = '';
+        document.getElementById('generationModeNote').style.display = 'none';
         return;
     }
 
     topicInput.value = `${catalog.topics[topicSelect.value].name} — ${catalog.topics[topicSelect.value].subtopics[subtopicSelect.value]}`;
+    const isSummary = subtopicSelect.value.endsWith('-bagrut');
+    const hours = Number(catalog.topics[topicSelect.value].subtopic_hours?.[subtopicSelect.value] || 0);
+    const note = document.getElementById('generationModeNote');
+    note.textContent = isSummary
+        ? `תוצר: שאלת סיכום מלאה בסגנון בגרות${hours ? ` | הקצאה בתוכנית: ${hours} שעות` : ''}`
+        : `תוצר: דף עבודה מדורג — בסיס, תרגול, מתקדם ויישום${hours ? ` | הקצאה בתוכנית: ${hours} שעות` : ''}`;
+    note.style.display = 'block';
+    document.getElementById('generateWorksheetButton').textContent = isSummary
+        ? 'צור שאלת סיכום מלאה'
+        : 'צור דף עבודה מדורג';
 }
 
 function populateSubtopics() {
@@ -642,7 +654,9 @@ function populateSubtopics() {
 
     if (topic) {
         Object.entries(topic.subtopics).forEach(([id, name]) => {
-            subtopicSelect.add(new Option(name, id));
+            const hours = Number(topic.subtopic_hours?.[id] || 0);
+            const type = id.endsWith('-bagrut') ? ' | שאלת סיכום' : ' | דף עבודה';
+            subtopicSelect.add(new Option(`${name}${hours ? ` (${hours} שעות)` : ''}${type}`, id));
         });
     }
 
@@ -671,6 +685,8 @@ function updateCurriculumFields() {
         : '';
     document.getElementById('worksheetResult').innerHTML = '';
     document.getElementById('worksheetResult').style.display = 'none';
+    document.getElementById('generationModeNote').style.display = 'none';
+    generateButton.textContent = 'צור דף עבודה';
 
     topicSelect.innerHTML = '<option value="">-- בחר נושא מרכזי --</option>';
     subtopicSelect.innerHTML = '<option value="">-- תחילה בחר נושא מרכזי --</option>';

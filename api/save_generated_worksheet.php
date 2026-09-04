@@ -75,8 +75,9 @@ if (!$absolutePdf || !$generatedRoot || !str_starts_with($absolutePdf, $generate
     worksheet_save_exit(['success' => false, 'message' => 'קובץ דף העבודה לא נמצא.'], 422);
 }
 
-$title = 'דף עבודה — ' . $selection['subtopic_name'];
-$description = $selection['topic_name'] . ' | ' . $selection['subtopic_name'] . ' | י״א 4 יח״ל';
+$titlePrefix = $selection['generation_mode'] === 'summary_question' ? 'שאלת סיכום — ' : 'דף עבודה — ';
+$title = $titlePrefix . $selection['subtopic_name'];
+$description = $selection['topic_name'] . ' | ' . $selection['subtopic_name'] . ' | ' . $selection['generation_label'] . ' | י״א 4 יח״ל';
 $stmt = $pdo->prepare(
     'INSERT INTO assignments
      (group_id, title, description, due_date, created_by, assignment_type,

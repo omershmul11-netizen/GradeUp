@@ -16,8 +16,9 @@ import numpy as np
 from PIL import Image, ImageDraw, ImageFont
 from docx import Document
 from docx.enum.text import WD_ALIGN_PARAGRAPH
-from docx.enum.table import WD_CELL_VERTICAL_ALIGNMENT, WD_TABLE_ALIGNMENT
+from docx.enum.table import WD_CELL_VERTICAL_ALIGNMENT, WD_ROW_HEIGHT_RULE, WD_TABLE_ALIGNMENT
 from docx.shared import Cm, Pt
+from docx.shared import RGBColor
 from docx.oxml import OxmlElement
 from docx.oxml.ns import qn
 
@@ -83,6 +84,163 @@ def add_math_text(paragraph, text, size=11, bold=False, italic=True):
     rtl_node.set(qn("w:val"), "0")
     run._element.get_or_add_rPr().append(rtl_node)
     return run
+
+
+def append_mixed(paragraph, parts, size=12, bold=False):
+    for kind, value in normalize_parts(parts):
+        if kind == "he":
+            set_run_font(paragraph.add_run(value), size=size, bold=bold)
+        else:
+            add_math_text(paragraph, value, size=max(9, size - 1), bold=bold)
+
+
+def set_bottom_border(paragraph, color="D5DEE8", size="6", space="4"):
+    props = paragraph._p.get_or_add_pPr()
+    borders = props.find(qn("w:pBdr"))
+    if borders is None:
+        borders = OxmlElement("w:pBdr")
+        props.append(borders)
+    bottom = OxmlElement("w:bottom")
+    bottom.set(qn("w:val"), "single")
+    bottom.set(qn("w:sz"), size)
+    bottom.set(qn("w:space"), space)
+    bottom.set(qn("w:color"), color)
+    borders.append(bottom)
+
+
+def set_cell_bottom_border(cell, color="DCE4EA", size="3"):
+    props = cell._tc.get_or_add_tcPr()
+    borders = OxmlElement("w:tcBorders")
+    for edge in ("top", "left", "right", "insideH", "insideV"):
+        border = OxmlElement(f"w:{edge}")
+        border.set(qn("w:val"), "nil")
+        borders.append(border)
+    bottom = OxmlElement("w:bottom")
+    bottom.set(qn("w:val"), "single")
+    bottom.set(qn("w:sz"), size)
+    bottom.set(qn("w:color"), color)
+    borders.append(bottom)
+    props.append(borders)
+
+
+def add_worksheet_header(doc, question):
+    brand = add_rtl_paragraph(doc, after=2)
+    brand_run = brand.add_run("GradeUp  |  דף עבודה במתמטיקה")
+    set_run_font(brand_run, size=9, bold=True)
+    brand_run.font.color.rgb = RGBColor(31, 79, 112)
+    set_bottom_border(brand, color="9FC3D5", size="8", space="5")
+
+    title = add_rtl_paragraph(doc, str(question.get("title", "דף עבודה")),
+                              size=18, bold=True, after=2, before=5)
+    title.paragraph_format.keep_with_next = True
+    meta = add_rtl_paragraph(doc, after=5)
+    set_run_font(meta.add_run(str(question.get("topic_label", ""))), size=10, bold=True)
+    set_run_font(meta.add_run("  |  "), size=10)
+    set_run_font(meta.add_run(str(question.get("unit_label", "י״א | 4 יח״ל"))), size=10)
+    set_run_font(meta.add_run("  |  "), size=10)
+    set_run_font(meta.add_run(str(question.get("difficulty_label", "מדורג"))), size=10)
+
+    identity = add_rtl_paragraph(
+        doc,
+        "שם: ____________________    כיתה: __________    תאריך: __________",
+        size=10, after=6,
+    )
+    set_bottom_border(identity, color="D5DEE8", size="4", space="5")
+    instructions = str(question.get("instructions", "פתרו לפי הסדר והציגו דרך."))
+    info = add_rtl_paragraph(doc, "דרך עבודה: " + instructions, size=10, after=7)
+    info.paragraph_format.keep_with_next = True
+
+
+def add_section_heading(doc, title, instruction=""):
+    paragraph = add_rtl_paragraph(doc, after=3, before=5)
+    paragraph.paragraph_format.keep_with_next = True
+    run = paragraph.add_run(str(title))
+    set_run_font(run, size=12, bold=True)
+    run.font.color.rgb = RGBColor(31, 79, 112)
+    if instruction:
+        set_run_font(paragraph.add_run("  |  " + str(instruction)), size=9)
+    set_bottom_border(paragraph, color="9FC3D5", size="6", space="3")
+
+
+def add_worksheet_exercise(doc, exercise):
+    table = doc.add_table(rows=1, cols=2)
+    table.alignment = WD_TABLE_ALIGNMENT.CENTER
+    table.autofit = False
+    table.columns[0].width = Cm(15.9)
+    table.columns[1].width = Cm(1.1)
+    table_props = table._tbl.tblPr
+    borders = OxmlElement("w:tblBorders")
+    for edge in ("top", "left", "bottom", "right", "insideH", "insideV"):
+        border = OxmlElement(f"w:{edge}")
+        border.set(qn("w:val"), "nil")
+        borders.append(border)
+    table_props.append(borders)
+
+    # LibreOffice lays out the first table cell on the right in this RTL document.
+    # Put the content there and reserve the second (physical-left) cell for numbering.
+    content_cell, number_cell = table.rows[0].cells
+    number_cell.width = Cm(1.1)
+    content_cell.width = Cm(15.9)
+    number_paragraph = number_cell.paragraphs[0]
+    number_paragraph.alignment = WD_ALIGN_PARAGRAPH.LEFT
+    number_paragraph.paragraph_format.keep_with_next = True
+    number_run = number_paragraph.add_run(f"{int(exercise.get('number'))}.")
+    set_run_font(number_run, size=11, bold=True, font_name=MATH_FONT)
+
+    paragraph = content_cell.paragraphs[0]
+    set_paragraph_rtl(paragraph)
+    paragraph.paragraph_format.space_after = Pt(2)
+    paragraph.paragraph_format.space_before = Pt(2)
+    paragraph.paragraph_format.keep_with_next = True
+    append_mixed(paragraph, exercise.get("parts", []), size=11)
+    if exercise.get("formula"):
+        set_run_font(paragraph.add_run(" "), size=11)
+        equation = OxmlElement("m:oMath")
+        append_formula(equation, exercise.get("formula"))
+        paragraph._p.append(equation)
+
+    line_count = min(max(int(exercise.get("workspace_lines", 2)), 1), 5)
+    workspace_table = doc.add_table(rows=1, cols=1)
+    workspace_table.alignment = WD_TABLE_ALIGNMENT.CENTER
+    workspace_table.autofit = False
+    workspace_table.columns[0].width = Cm(17.0)
+    workspace_row = workspace_table.rows[0]
+    workspace_row.height = Cm(0.55 * line_count)
+    workspace_row.height_rule = WD_ROW_HEIGHT_RULE.EXACTLY
+    workspace_cell = workspace_row.cells[0]
+    workspace_cell.width = Cm(17.0)
+    workspace_cell.vertical_alignment = WD_CELL_VERTICAL_ALIGNMENT.BOTTOM
+    set_cell_bottom_border(workspace_cell)
+    workspace_paragraph = workspace_cell.paragraphs[0]
+    workspace_paragraph.paragraph_format.space_after = Pt(0)
+    workspace_paragraph.paragraph_format.space_before = Pt(0)
+    workspace_marker = workspace_paragraph.add_run("·")
+    set_run_font(workspace_marker, size=8)
+    workspace_marker.font.color.rgb = RGBColor(255, 255, 255)
+
+
+def render_practice_worksheet_docx(question, docx_path):
+    doc = new_document()
+    add_worksheet_header(doc, question)
+    sections = question.get("sections", [])
+    if len(sections) != 4:
+        raise ValueError("A practice worksheet must contain exactly four sections")
+    exercise_count = 0
+    for section_index, section in enumerate(sections):
+        add_section_heading(doc, section.get("title", ""), section.get("instruction", ""))
+        exercises = section.get("exercises", [])
+        if not exercises:
+            raise ValueError("A worksheet section cannot be empty")
+        for exercise in exercises:
+            exercise_count += 1
+            if int(exercise.get("number", 0)) != exercise_count:
+                raise ValueError("Exercise numbering must be consecutive")
+            add_worksheet_exercise(doc, exercise)
+        if section_index == 1:
+            doc.add_page_break()
+    if not 8 <= exercise_count <= 12:
+        raise ValueError("A practice worksheet must contain 8-12 exercises")
+    doc.save(docx_path)
 
 
 def normalize_parts(parts):
@@ -461,7 +619,8 @@ def fontconfig_xml(cache_dir):
     )
 
 
-def convert_and_verify(docx_path, pdf_path, preview_dir, temp_dir):
+def convert_and_verify(docx_path, pdf_path, preview_dir, temp_dir,
+                       document_type="summary_question"):
     cache = temp_dir / "font-cache"
     cache.mkdir()
     config = temp_dir / "fonts.conf"
@@ -488,8 +647,13 @@ def convert_and_verify(docx_path, pdf_path, preview_dir, temp_dir):
     ], check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     info = subprocess.run([executable("pdfinfo"), str(pdf_path)], check=True,
                           text=True, stdout=subprocess.PIPE).stdout
-    if "Pages:           1" not in info or "Page size:       595" not in info:
-        raise RuntimeError("Generated question must be a single A4 page")
+    page_match = re.search(r"^Pages:\s+(\d+)$", info, flags=re.MULTILINE)
+    page_count = int(page_match.group(1)) if page_match else 0
+    max_pages = 3 if document_type == "practice_worksheet" else 1
+    if not 1 <= page_count <= max_pages or "Page size:       595" not in info:
+        raise RuntimeError(
+            f"Generated {document_type} must contain 1-{max_pages} A4 pages"
+        )
     fonts = subprocess.run([executable("pdffonts"), str(pdf_path)], check=True,
                            text=True, stdout=subprocess.PIPE).stdout
     if "FbDavidNewPro-Regular" not in fonts or "FbDavidNewPro-Bold" not in fonts:
@@ -519,8 +683,17 @@ def main():
         preview_dir = output_dir / f"{token}-preview"
         with tempfile.TemporaryDirectory(prefix="gradeup-471-") as temp_name:
             temp_dir = Path(temp_name)
-            render_docx(question, docx_path, temp_dir)
-            convert_and_verify(docx_path, pdf_path, preview_dir, temp_dir)
+            document_type = str(question.get("document_type", "summary_question"))
+            if document_type == "practice_worksheet":
+                render_practice_worksheet_docx(question, docx_path)
+            elif document_type == "summary_question":
+                render_docx(question, docx_path, temp_dir)
+            else:
+                raise ValueError("Unsupported document_type")
+            convert_and_verify(
+                docx_path, pdf_path, preview_dir, temp_dir,
+                document_type=document_type,
+            )
         preview_pages = sorted(preview_dir.glob("page-*.png"))
         results.append({
             "id": token,

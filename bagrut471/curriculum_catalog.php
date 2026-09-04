@@ -75,6 +75,29 @@ function gradeup_curriculum_catalog(): array
                         'integral-parameter' => 'שימוש בפרמטר בשאלות אינטגרל',
                         'calculus-bagrut' => 'חקירת פונקציה מלאה בסגנון בגרות',
                     ],
+                    // הקצאה תלת־חודשית פעילה: 45 שעות הוראה בכיתה י״א, 4 יח״ל.
+                    'subtopic_hours' => [
+                        'rational-pre-analysis' => 2,
+                        'transformations' => 2,
+                        'derivative-rules' => 3,
+                        'tangent' => 2,
+                        'domain-asymptotes' => 3,
+                        'intersections-sign' => 2,
+                        'extrema-monotonicity' => 3,
+                        'rational-investigation' => 3,
+                        'radical-investigation' => 3,
+                        'even-odd' => 1,
+                        'function-derivative-graph' => 2,
+                        'parameters' => 3,
+                        'optimization' => 2,
+                        'optimization-applications' => 3,
+                        'antiderivative' => 2,
+                        'definite-integral' => 2,
+                        'area-axis' => 2,
+                        'area-between-graphs' => 2,
+                        'integral-parameter' => 1,
+                        'calculus-bagrut' => 2,
+                    ],
                 ],
             ],
         ],
@@ -96,12 +119,16 @@ function gradeup_curriculum_selection(array $catalog, string $topicId, string $s
     if (!isset($catalog['topics'][$topicId]['subtopics'][$subtopicId])) {
         return null;
     }
+    $topic = $catalog['topics'][$topicId];
+    $isSummary = str_ends_with($subtopicId, '-bagrut');
     return [
         'topic_id' => $topicId,
-        'topic_name' => $catalog['topics'][$topicId]['name'],
+        'topic_name' => $topic['name'],
         'subtopic_id' => $subtopicId,
-        'subtopic_name' => $catalog['topics'][$topicId]['subtopics'][$subtopicId],
-        'display_name' => $catalog['topics'][$topicId]['name'] . ' — ' . $catalog['topics'][$topicId]['subtopics'][$subtopicId],
+        'subtopic_name' => $topic['subtopics'][$subtopicId],
+        'display_name' => $topic['name'] . ' — ' . $topic['subtopics'][$subtopicId],
+        'hours' => (int)($topic['subtopic_hours'][$subtopicId] ?? 0),
+        'generation_mode' => $isSummary ? 'summary_question' : 'practice_worksheet',
+        'generation_label' => $isSummary ? 'שאלת סיכום מלאה' : 'דף עבודה מדורג',
     ];
 }
-
