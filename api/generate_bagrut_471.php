@@ -165,11 +165,14 @@ function bagrut_build_prompt($skillText, $selection, $previousError = '') {
 - הנושא הראשי: {$topic}. הקצאת ההוראה לתת־הנושא: {$hours} שעות.
 - יעד: 4 יחידות, כיתה י״א.
 - זהו דף תרגול של מיומנות, לא שאלת בגרות מלאה ולא חקירה אחת ארוכה.
-- בנה 8–12 תרגילים קצרים ומגוונים בארבעה מקטעים: בסיס, תרגול, מתקדם ויישום.
+- בנה חוברת תרגול בת שישה עמודי A4, במבנה המדויק של דף הייחוס המאושר של GradeUp.
+- החוברת כוללת 34 תרגילים/סעיפים קצרים ומגוונים בארבעה מקטעים: 10 בסיס, 10 תרגול רגיל, 8 מתקדמים ו־6 סעיפי יישום.
 - כל תרגיל יכוון למיומנות ברורה מתוך תת־הנושא. העלייה בקושי תהיה הדרגתית.
-- מקטע היישום משלב את המיומנות בתוך הקשר בגרות קצר, אך אינו הופך לשאלה מלאה על כל הנושא.
+- מקטע היישום הוא רצף קצר ותלוי־הקשר שמיישם רק את תת־הנושא שנבחר. הוא אינו שאלת בגרות מלאה, אינו חקירת פונקציה מלאה ואינו בודק את כל הנושא הראשי.
 - אין שאלות אמריקאיות, אין שלוש חלופות ואין פתרונות בדף התלמיד.
-- הקצה 1–5 שורות עבודה לכל תרגיל לפי אורך הפתרון הצפוי.
+- הקצה 1–3 שורות עבודה לכל תרגיל לפי אורך הפתרון הצפוי.
+- המספור מתחיל מחדש בכל מקטע. כל מספר תרגיל יוצג משמאל לתרגיל ובכיוון LTR; המלל העברי נשאר RTL והמתמטיקה LTR.
+- פצל את המקטעים לשישה עמודים בדיוק: בסיס בשני עמודים (8+2), תרגול בשני עמודים (8+2), מתקדם בעמוד אחד (8), יישום בעמוד אחד (6).
 - {$domainRules}
 - בטקסט הגלוי השתמש בסימון מתמטי מודפס בלבד: √ ולא sqrt, וחזקות רגילות ולא **.
 - בצע פתרון מלא ובדיקת נכונות באופן פרטי בשדה private_validation בלבד.
@@ -190,14 +193,19 @@ function bagrut_build_prompt($skillText, $selection, $previousError = '') {
       "instructions": "פתרו לפי הסדר והציגו דרך.",
       "sections": [
         {
-          "title": "חלק א — בסיס",
-          "instruction": "חימום וזיהוי המיומנות",
-          "exercises": [
+          "title": "חלק א — רמת בסיס: זיהוי והבנה",
+          "pages": [
             {
-              "number": 1,
-              "parts": [{"kind":"he","text":"הוראה קצרה"}],
-              "formula": FORMULA_NODE או null,
-              "workspace_lines": 2
+              "instruction": "חימום וזיהוי המיומנות",
+              "exercises": [
+                {
+                  "number": 1,
+                  "parts": [{"kind":"he","text":"הוראה קצרה"}],
+                  "formula": FORMULA_NODE או null,
+                  "workspace_lines": 1,
+                  "answer_label": "פתרון:"
+                }
+              ]
             }
           ]
         }
@@ -212,10 +220,13 @@ function bagrut_build_prompt($skillText, $selection, $previousError = '') {
 }
 
 חובה להחזיר בדיוק ארבעה sections ובסדר הבא:
-1. חלק א — בסיס
-2. חלק ב — תרגול
-3. חלק ג — מתקדם
-4. חלק ד — יישום
+1. חלק א — רמת בסיס: זיהוי והבנה — שני pages עם 8 ואז 2 תרגילים
+2. חלק ב — תרגול רגיל — שני pages עם 8 ואז 2 תרגילים
+3. חלק ג — רמה מתקדמת: נימוק ואיתור טעות — page אחד עם 8 תרגילים
+4. חלק ד — יישום בסגנון בגרות — page אחד עם 6 סעיפים קצרים סביב הקשר משותף
+
+בכל section המספור מתחיל ב־1 ורציף עד מספר התרגילים במקטע. בכל page השני של אותו section המשך את המספור מן העמוד הקודם.
+במקטע ד מותר להוסיף לשדה section את context_parts ואת context_formula להצגת נתון משותף לפני ששת הסעיפים.
 
 FORMULA_NODE הוא אחד מהבאים בלבד:
 - {"type":"text","value":"f(x)=..."}
@@ -320,34 +331,50 @@ function bagrut_visible_payload($payload, $expectedCount) {
             if (!is_array($sections) || count($sections) !== 4) {
                 throw new RuntimeException('דף עבודה חייב להכיל ארבעה מקטעים מדורגים.');
             }
-            $expectedTitles = ['חלק א — בסיס', 'חלק ב — תרגול', 'חלק ג — מתקדם', 'חלק ד — יישום'];
+            $expectedTitles = [
+                'חלק א — רמת בסיס: זיהוי והבנה',
+                'חלק ב — תרגול רגיל',
+                'חלק ג — רמה מתקדמת: נימוק ואיתור טעות',
+                'חלק ד — יישום בסגנון בגרות'
+            ];
+            $expectedPageCounts = [2, 2, 1, 1];
+            $expectedExerciseCounts = [[8, 2], [8, 2], [8], [6]];
             $exerciseCount = 0;
             foreach ($sections as $index => $section) {
                 if (($section['title'] ?? '') !== $expectedTitles[$index]) {
                     throw new RuntimeException('כותרות מקטעי דף העבודה אינן במבנה המאושר.');
                 }
-                if (empty($section['exercises']) || !is_array($section['exercises'])) {
-                    throw new RuntimeException('מקטע בדף העבודה אינו מכיל תרגילים.');
+                $pages = $section['pages'] ?? null;
+                if (!is_array($pages) || count($pages) !== $expectedPageCounts[$index]) {
+                    throw new RuntimeException('חלוקת העמודים בדף העבודה אינה במבנה המאושר.');
                 }
-                foreach ($section['exercises'] as $exercise) {
-                    $exerciseCount++;
-                    if ((int)($exercise['number'] ?? 0) !== $exerciseCount) {
-                        throw new RuntimeException('מספור התרגילים בדף העבודה אינו רציף.');
+                $sectionExerciseNumber = 0;
+                foreach ($pages as $pageIndex => $page) {
+                    $exercises = $page['exercises'] ?? null;
+                    if (!is_array($exercises) || count($exercises) !== $expectedExerciseCounts[$index][$pageIndex]) {
+                        throw new RuntimeException('מספר התרגילים בעמוד אינו תואם לדף העבודה המאושר.');
                     }
-                    $lines = (int)($exercise['workspace_lines'] ?? 0);
-                    if ($lines < 1 || $lines > 5) {
-                        throw new RuntimeException('שטח העבודה לתרגיל אינו בטווח המאושר.');
-                    }
-                    if (empty($exercise['parts']) && empty($exercise['formula'])) {
-                        throw new RuntimeException('נמצא תרגיל ללא תוכן.');
+                    foreach ($exercises as $exercise) {
+                        $exerciseCount++;
+                        $sectionExerciseNumber++;
+                        if ((int)($exercise['number'] ?? 0) !== $sectionExerciseNumber) {
+                            throw new RuntimeException('מספור התרגילים במקטע אינו רציף.');
+                        }
+                        $lines = (int)($exercise['workspace_lines'] ?? 0);
+                        if ($lines < 1 || $lines > 3) {
+                            throw new RuntimeException('שטח העבודה לתרגיל אינו בטווח המאושר.');
+                        }
+                        if (empty($exercise['parts']) && empty($exercise['formula'])) {
+                            throw new RuntimeException('נמצא תרגיל ללא תוכן.');
+                        }
                     }
                 }
             }
-            if ($exerciseCount < 8 || $exerciseCount > 12) {
-                throw new RuntimeException('דף עבודה חייב להכיל 8–12 תרגילים.');
+            if ($exerciseCount !== 34) {
+                throw new RuntimeException('דף עבודה חייב להכיל 34 תרגילים וסעיפים מדורגים.');
             }
             $visible = json_encode($sections, JSON_UNESCAPED_UNICODE);
-            foreach (['פתרון', 'תשובה סופית', 'private_validation'] as $forbidden) {
+            foreach (['פתרון מלא', 'תשובה סופית', 'private_validation'] as $forbidden) {
                 if (strpos($visible, $forbidden) !== false) {
                     throw new RuntimeException('נמצא טקסט פתרון באזור הגלוי.');
                 }

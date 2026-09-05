@@ -124,12 +124,6 @@ def set_cell_bottom_border(cell, color="DCE4EA", size="3"):
 
 
 def add_worksheet_header(doc, question):
-    brand = add_rtl_paragraph(doc, after=2)
-    brand_run = brand.add_run("GradeUp  |  דף עבודה במתמטיקה")
-    set_run_font(brand_run, size=9, bold=True)
-    brand_run.font.color.rgb = RGBColor(31, 79, 112)
-    set_bottom_border(brand, color="9FC3D5", size="8", space="5")
-
     title = add_rtl_paragraph(doc, str(question.get("title", "דף עבודה")),
                               size=18, bold=True, after=2, before=5)
     title.paragraph_format.keep_with_next = True
@@ -151,6 +145,32 @@ def add_worksheet_header(doc, question):
     info.paragraph_format.keep_with_next = True
 
 
+def add_repeating_worksheet_header(section, question):
+    for header in (section.header, section.even_page_header):
+        paragraph = header.paragraphs[0]
+        for child in list(paragraph._p):
+            paragraph._p.remove(child)
+        set_paragraph_rtl(paragraph)
+        paragraph.paragraph_format.space_after = Pt(0)
+        brand = paragraph.add_run("GradeUp")
+        set_run_font(brand, size=9, bold=True)
+        brand.font.color.rgb = RGBColor(31, 79, 112)
+        set_run_font(paragraph.add_run("  |  מתמטיקה — 4 יחידות  |  "), size=9)
+        set_run_font(paragraph.add_run(str(question.get("topic_label", ""))), size=9, bold=True)
+        set_bottom_border(paragraph, color="9FC3D5", size="6", space="4")
+
+
+def add_even_page_body_header(doc, question):
+    """LibreOffice omits DOCX even-page headers; mirror it in the page body."""
+    paragraph = add_rtl_paragraph(doc, after=5)
+    brand = paragraph.add_run("GradeUp")
+    set_run_font(brand, size=9, bold=True)
+    brand.font.color.rgb = RGBColor(31, 79, 112)
+    set_run_font(paragraph.add_run("  |  מתמטיקה — 4 יחידות  |  "), size=9)
+    set_run_font(paragraph.add_run(str(question.get("topic_label", ""))), size=9, bold=True)
+    set_bottom_border(paragraph, color="9FC3D5", size="6", space="4")
+
+
 def add_section_heading(doc, title, instruction=""):
     paragraph = add_rtl_paragraph(doc, after=3, before=5)
     paragraph.paragraph_format.keep_with_next = True
@@ -162,12 +182,28 @@ def add_section_heading(doc, title, instruction=""):
     set_bottom_border(paragraph, color="9FC3D5", size="6", space="3")
 
 
+def add_section_context(doc, section):
+    parts = section.get("context_parts", [])
+    formula = section.get("context_formula")
+    if not parts and not formula:
+        return
+    paragraph = add_rtl_paragraph(doc, after=5, before=2)
+    paragraph.paragraph_format.keep_with_next = True
+    if parts:
+        append_mixed(paragraph, parts, size=11)
+    if formula:
+        set_run_font(paragraph.add_run(" "), size=11)
+        equation = OxmlElement("m:oMath")
+        append_formula(equation, formula)
+        paragraph._p.append(equation)
+
+
 def add_worksheet_exercise(doc, exercise):
     table = doc.add_table(rows=1, cols=2)
     table.alignment = WD_TABLE_ALIGNMENT.CENTER
     table.autofit = False
-    table.columns[0].width = Cm(15.9)
-    table.columns[1].width = Cm(1.1)
+    table.columns[0].width = Cm(1.1)
+    table.columns[1].width = Cm(15.9)
     table_props = table._tbl.tblPr
     borders = OxmlElement("w:tblBorders")
     for edge in ("top", "left", "bottom", "right", "insideH", "insideV"):
@@ -176,9 +212,9 @@ def add_worksheet_exercise(doc, exercise):
         borders.append(border)
     table_props.append(borders)
 
-    # LibreOffice lays out the first table cell on the right in this RTL document.
-    # Put the content there and reserve the second (physical-left) cell for numbering.
-    content_cell, number_cell = table.rows[0].cells
+    # In the generated PDF the first cell is physical-left. Keep the LTR exercise
+    # number there and put all RTL Hebrew / LTR mathematics in the wide right cell.
+    number_cell, content_cell = table.rows[0].cells
     number_cell.width = Cm(1.1)
     content_cell.width = Cm(15.9)
     number_paragraph = number_cell.paragraphs[0]
@@ -205,7 +241,7 @@ def add_worksheet_exercise(doc, exercise):
     workspace_table.autofit = False
     workspace_table.columns[0].width = Cm(17.0)
     workspace_row = workspace_table.rows[0]
-    workspace_row.height = Cm(0.55 * line_count)
+    workspace_row.height = Cm(0.48 * line_count + 0.28)
     workspace_row.height_rule = WD_ROW_HEIGHT_RULE.EXACTLY
     workspace_cell = workspace_row.cells[0]
     workspace_cell.width = Cm(17.0)
@@ -214,32 +250,54 @@ def add_worksheet_exercise(doc, exercise):
     workspace_paragraph = workspace_cell.paragraphs[0]
     workspace_paragraph.paragraph_format.space_after = Pt(0)
     workspace_paragraph.paragraph_format.space_before = Pt(0)
-    workspace_marker = workspace_paragraph.add_run("·")
-    set_run_font(workspace_marker, size=8)
-    workspace_marker.font.color.rgb = RGBColor(255, 255, 255)
+    set_paragraph_rtl(workspace_paragraph)
+    answer_label = str(exercise.get("answer_label", "פתרון:"))
+    workspace_marker = workspace_paragraph.add_run(answer_label)
+    set_run_font(workspace_marker, size=9, bold=True)
+    workspace_marker.font.color.rgb = RGBColor(31, 79, 112)
 
 
 def render_practice_worksheet_docx(question, docx_path):
     doc = new_document()
-    add_worksheet_header(doc, question)
+    doc.settings.odd_and_even_pages_header_footer = True
+    add_repeating_worksheet_header(doc.sections[0], question)
     sections = question.get("sections", [])
     if len(sections) != 4:
         raise ValueError("A practice worksheet must contain exactly four sections")
+    expected_page_counts = [2, 2, 1, 1]
+    expected_exercise_counts = [[8, 2], [8, 2], [8], [6]]
     exercise_count = 0
+    physical_page = 0
     for section_index, section in enumerate(sections):
-        add_section_heading(doc, section.get("title", ""), section.get("instruction", ""))
-        exercises = section.get("exercises", [])
-        if not exercises:
-            raise ValueError("A worksheet section cannot be empty")
-        for exercise in exercises:
-            exercise_count += 1
-            if int(exercise.get("number", 0)) != exercise_count:
-                raise ValueError("Exercise numbering must be consecutive")
-            add_worksheet_exercise(doc, exercise)
-        if section_index == 1:
-            doc.add_page_break()
-    if not 8 <= exercise_count <= 12:
-        raise ValueError("A practice worksheet must contain 8-12 exercises")
+        pages = section.get("pages", [])
+        if len(pages) != expected_page_counts[section_index]:
+            raise ValueError("A worksheet section has an invalid page count")
+        section_number = 0
+        for page_index, page in enumerate(pages):
+            physical_page += 1
+            if exercise_count:
+                doc.add_page_break()
+                if physical_page % 2 == 0:
+                    add_even_page_body_header(doc, question)
+            else:
+                add_worksheet_header(doc, question)
+            title = str(section.get("title", ""))
+            if page_index:
+                title += " — המשך"
+            add_section_heading(doc, title, page.get("instruction", ""))
+            if page_index == 0:
+                add_section_context(doc, section)
+            exercises = page.get("exercises", [])
+            if len(exercises) != expected_exercise_counts[section_index][page_index]:
+                raise ValueError("A worksheet page has an invalid exercise count")
+            for exercise in exercises:
+                exercise_count += 1
+                section_number += 1
+                if int(exercise.get("number", 0)) != section_number:
+                    raise ValueError("Exercise numbering must be consecutive within a section")
+                add_worksheet_exercise(doc, exercise)
+    if exercise_count != 34:
+        raise ValueError("A practice worksheet must contain exactly 34 exercises")
     doc.save(docx_path)
 
 
@@ -420,10 +478,11 @@ def new_document():
     section = doc.sections[0]
     section.page_width = Cm(21)
     section.page_height = Cm(29.7)
-    section.top_margin = Cm(1.25)
+    section.top_margin = Cm(1.65)
     section.bottom_margin = Cm(1.25)
     section.left_margin = Cm(1.7)
     section.right_margin = Cm(1.7)
+    section.header_distance = Cm(0.45)
     normal = doc.styles["Normal"]
     normal.font.name = HEBREW_REGULAR
     normal.font.size = Pt(12)
@@ -649,10 +708,10 @@ def convert_and_verify(docx_path, pdf_path, preview_dir, temp_dir,
                           text=True, stdout=subprocess.PIPE).stdout
     page_match = re.search(r"^Pages:\s+(\d+)$", info, flags=re.MULTILINE)
     page_count = int(page_match.group(1)) if page_match else 0
-    max_pages = 3 if document_type == "practice_worksheet" else 1
-    if not 1 <= page_count <= max_pages or "Page size:       595" not in info:
+    expected_pages = 6 if document_type == "practice_worksheet" else 1
+    if page_count != expected_pages or "Page size:       595" not in info:
         raise RuntimeError(
-            f"Generated {document_type} must contain 1-{max_pages} A4 pages"
+            f"Generated {document_type} must contain exactly {expected_pages} A4 pages"
         )
     fonts = subprocess.run([executable("pdffonts"), str(pdf_path)], check=True,
                            text=True, stdout=subprocess.PIPE).stdout

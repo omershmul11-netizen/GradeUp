@@ -1,44 +1,98 @@
 {
   "questions": [
     {
-      "id": "worksheet-derivative-rules",
+      "id": "worksheet-product-quotient-reference",
       "document_type": "practice_worksheet",
-      "title": "נגזרות של פונקציות רציונליות ופונקציות שורש",
-      "topic_label": "פונקציות וחשבון דיפרנציאלי ואינטגרלי",
+      "title": "כלל המכפלה וכלל המנה",
+      "topic_label": "חקירת פונקציות",
       "unit_label": "י״א | 4 יח״ל",
       "difficulty_label": "מדורג: בסיס עד יישום",
-      "instructions": "פתרו לפי הסדר והציגו דרך.",
+      "instructions": "כתבו את שלבי הגזירה ופשטו את הביטוי הסופי.",
       "sections": [
         {
-          "title": "חלק א — בסיס",
-          "instruction": "זהו את כלל הגזירה המתאים",
-          "exercises": [
-            {"number": 1, "parts": [{"kind": "he", "text": "גזרו את הפונקציה."}], "formula": {"type": "text", "value": "f(x)=x³−4x"}, "workspace_lines": 2},
-            {"number": 2, "parts": [{"kind": "he", "text": "גזרו את הפונקציה."}], "formula": {"type": "sqrt", "value": {"type": "row", "children": [{"type": "text", "value": "x+3"}]}}, "workspace_lines": 2}
+          "title": "חלק א — רמת בסיס: זיהוי והבנה",
+          "pages": [
+            {
+              "instruction": "זהו את כלל הגזירה המתאים, ולאחר מכן גזרו בהדרגה.",
+              "exercises": [
+                {"number": 1, "parts": [{"kind": "he", "text": "קבעו באיזה כלל גזירה יש להשתמש."}], "formula": {"type": "text", "value": "f(x)=(x²+1)(x−3)"}, "workspace_lines": 1, "answer_label": "הכלל:"},
+                {"number": 2, "parts": [{"kind": "he", "text": "קבעו באיזה כלל גזירה יש להשתמש."}], "formula": {"type": "text", "value": "g(x)=(3x−2)/(x+1)"}, "workspace_lines": 1, "answer_label": "הכלל:"},
+                {"number": 3, "parts": [{"kind": "he", "text": "קבעו באיזה כלל גזירה יש להשתמש."}], "formula": {"type": "text", "value": "h(x)=x³−5x"}, "workspace_lines": 1, "answer_label": "הכלל:"},
+                {"number": 4, "parts": [{"kind": "he", "text": "קבעו באיזה כלל גזירה יש להשתמש."}], "formula": {"type": "text", "value": "p(x)=x²(x+5)"}, "workspace_lines": 1, "answer_label": "הכלל:"},
+                {"number": 5, "parts": [{"kind": "he", "text": "קבעו באיזה כלל גזירה יש להשתמש."}], "formula": {"type": "text", "value": "q(x)=(2x+1)/x²"}, "workspace_lines": 1, "answer_label": "הכלל:"},
+                {"number": 6, "parts": [{"kind": "he", "text": "קבעו באיזה כלל גזירה יש להשתמש."}], "formula": {"type": "text", "value": "r(x)=(x−1)(x+1)"}, "workspace_lines": 1, "answer_label": "הכלל:"},
+                {"number": 7, "parts": [{"kind": "he", "text": "רשמו את שני הגורמים וגזרו."}], "formula": {"type": "text", "value": "f(x)=(x²+1)(x−3)"}, "workspace_lines": 2},
+                {"number": 8, "parts": [{"kind": "he", "text": "רשמו את שני הגורמים וגזרו."}], "formula": {"type": "text", "value": "f(x)=x²(3x+4)"}, "workspace_lines": 2}
+              ]
+            },
+            {
+              "instruction": "המשיכו לפי הכלל המתאים לפני פעולת הפישוט.",
+              "exercises": [
+                {"number": 9, "parts": [{"kind": "he", "text": "גזרו באמצעות כלל המנה."}], "formula": {"type": "text", "value": "f(x)=(x²+4)/x"}, "workspace_lines": 3},
+                {"number": 10, "parts": [{"kind": "he", "text": "גזרו באמצעות כלל המנה."}], "formula": {"type": "text", "value": "f(x)=(2x−1)/(x²+1)"}, "workspace_lines": 3}
+              ]
+            }
           ]
         },
         {
-          "title": "חלק ב — תרגול",
-          "instruction": "יישמו כלל מכפלה וכלל מנה",
-          "exercises": [
-            {"number": 3, "parts": [{"kind": "he", "text": "גזרו ופשטו."}], "formula": {"type": "text", "value": "f(x)=(x²+1)(x−3)"}, "workspace_lines": 3},
-            {"number": 4, "parts": [{"kind": "he", "text": "גזרו ופשטו."}], "formula": {"type": "frac", "numerator": {"type": "text", "value": "3x−2"}, "denominator": {"type": "text", "value": "x+1"}}, "workspace_lines": 3}
+          "title": "חלק ב — תרגול רגיל",
+          "pages": [
+            {
+              "instruction": "גזרו את הפונקציות ופשטו כאשר הדבר אפשרי.",
+              "exercises": [
+                {"number": 1, "parts": [{"kind": "he", "text": "גזרו ופשטו."}], "formula": {"type": "text", "value": "f(x)=(x²+3)(2x−5)"}, "workspace_lines": 2},
+                {"number": 2, "parts": [{"kind": "he", "text": "גזרו ופשטו."}], "formula": {"type": "text", "value": "f(x)=x³(4−x)"}, "workspace_lines": 2},
+                {"number": 3, "parts": [{"kind": "he", "text": "גזרו ופשטו."}], "formula": {"type": "text", "value": "f(x)=(3x+1)(x²−2x+4)"}, "workspace_lines": 2},
+                {"number": 4, "parts": [{"kind": "he", "text": "גזרו ופשטו."}], "formula": {"type": "text", "value": "f(x)=(x²−4)(x+2)"}, "workspace_lines": 2},
+                {"number": 5, "parts": [{"kind": "he", "text": "גזרו ופשטו."}], "formula": {"type": "text", "value": "f(x)=5x(x²−4)"}, "workspace_lines": 2},
+                {"number": 6, "parts": [{"kind": "he", "text": "גזרו ופשטו."}], "formula": {"type": "text", "value": "f(x)=(x²−4)/(x+1)"}, "workspace_lines": 2},
+                {"number": 7, "parts": [{"kind": "he", "text": "גזרו ופשטו."}], "formula": {"type": "text", "value": "f(x)=(2x+3)/(x²+1)"}, "workspace_lines": 2},
+                {"number": 8, "parts": [{"kind": "he", "text": "גזרו ופשטו."}], "formula": {"type": "text", "value": "f(x)=(x³−1)/(x−2)"}, "workspace_lines": 2}
+              ]
+            },
+            {
+              "instruction": "גזרו, פשטו ובדקו את המכנה בביטוי שהתקבל.",
+              "exercises": [
+                {"number": 9, "parts": [{"kind": "he", "text": "גזרו ופשטו."}], "formula": {"type": "text", "value": "f(x)=(x²+1)/x"}, "workspace_lines": 3},
+                {"number": 10, "parts": [{"kind": "he", "text": "גזרו ופשטו."}], "formula": {"type": "text", "value": "f(x)=(x−4)/x²"}, "workspace_lines": 3}
+              ]
+            }
           ]
         },
         {
-          "title": "חלק ג — מתקדם",
-          "instruction": "שלבו תחום ופישוט",
-          "exercises": [
-            {"number": 5, "parts": [{"kind": "he", "text": "מצאו תחום הגדרה וגזרו."}], "formula": {"type": "frac", "numerator": {"type": "text", "value": "x²+4"}, "denominator": {"type": "text", "value": "x"}}, "workspace_lines": 4},
-            {"number": 6, "parts": [{"kind": "he", "text": "גזרו וקבעו היכן הנגזרת מתאפסת."}], "formula": {"type": "text", "value": "f(x)=x√(x+2)"}, "workspace_lines": 4}
+          "title": "חלק ג — רמה מתקדמת: נימוק ואיתור טעות",
+          "pages": [
+            {
+              "instruction": "שלבו פישוט, נימוק ובדיקת דרך.",
+              "exercises": [
+                {"number": 1, "parts": [{"kind": "he", "text": "גזרו בשתי דרכים והשוו."}], "formula": {"type": "text", "value": "f(x)=(x²+4)/x"}, "workspace_lines": 2},
+                {"number": 2, "parts": [{"kind": "he", "text": "פשטו תחילה, גזרו וקבעו מתי הנגזרת מתאפסת."}], "formula": {"type": "text", "value": "f(x)=(x²+3x)/(x+3)"}, "workspace_lines": 2},
+                {"number": 3, "parts": [{"kind": "he", "text": "מצאו עבור אילו ערכי "}, {"kind": "math", "text": "x"}, {"kind": "he", "text": " הגזירה תקפה."}], "formula": {"type": "text", "value": "f(x)=(x²−4x+5)/(x−2)"}, "workspace_lines": 2},
+                {"number": 4, "parts": [{"kind": "he", "text": "גזרו ומצאו את נקודות הקיצון."}], "formula": {"type": "text", "value": "f(x)=x²(x−3)"}, "workspace_lines": 2},
+                {"number": 5, "parts": [{"kind": "he", "text": "תלמיד כתב "}, {"kind": "math", "text": "f′(x)=2x"}, {"kind": "he", "text": ". מצאו את הטעות ותקנו."}], "formula": {"type": "text", "value": "f(x)=(x²+1)(x−2)"}, "workspace_lines": 2},
+                {"number": 6, "parts": [{"kind": "he", "text": "תלמיד טען כי הנגזרת היא "}, {"kind": "math", "text": "2x"}, {"kind": "he", "text": ". הסבירו את הטעות."}], "formula": {"type": "text", "value": "g(x)=(x²+1)/(x−1)"}, "workspace_lines": 2},
+                {"number": 7, "parts": [{"kind": "he", "text": "גזרו ובדקו אם המכנה שהתקבל נכון."}], "formula": {"type": "text", "value": "h(x)=(3x−1)/(x+2)"}, "workspace_lines": 2},
+                {"number": 8, "parts": [{"kind": "he", "text": "גזרו, פשטו ונמקו את סימן הנגזרת."}], "formula": {"type": "text", "value": "p(x)=(2x+1)/(x−3)"}, "workspace_lines": 2}
+              ]
+            }
           ]
         },
         {
-          "title": "חלק ד — יישום",
-          "instruction": "השתמשו בנגזרת בתוך הקשר קצר",
-          "exercises": [
-            {"number": 7, "parts": [{"kind": "he", "text": "מצאו את שיפוע המשיק בנקודה שבה "}, {"kind": "math", "text": "x=2"}, {"kind": "he", "text": "."}], "formula": {"type": "text", "value": "f(x)=x²/(x+1)"}, "workspace_lines": 4},
-            {"number": 8, "parts": [{"kind": "he", "text": "מצאו את נקודות הקיצון וקבעו את סוגן."}], "formula": {"type": "text", "value": "f(x)=x²(x−3)"}, "workspace_lines": 5}
+          "title": "חלק ד — יישום בסגנון בגרות",
+          "context_parts": [{"kind": "he", "text": "נתונה הפונקציה הבאה, ובה "}, {"kind": "math", "text": "a"}, {"kind": "he", "text": " הוא פרמטר."}],
+          "context_formula": {"type": "text", "value": "f(x)=(x²+a)/x"},
+          "pages": [
+            {
+              "instruction": "השתמשו בתוצאות שמצאתם בסעיפים הקודמים.",
+              "exercises": [
+                {"number": 1, "parts": [{"kind": "he", "text": "מצאו את תחום ההגדרה."}], "formula": null, "workspace_lines": 1},
+                {"number": 2, "parts": [{"kind": "he", "text": "גזרו את הפונקציה באמצעות כלל המנה."}], "formula": null, "workspace_lines": 2},
+                {"number": 3, "parts": [{"kind": "he", "text": "פשטו את ביטוי הנגזרת ככל האפשר."}], "formula": null, "workspace_lines": 1},
+                {"number": 4, "parts": [{"kind": "he", "text": "נתון כי המשיק בנקודה שבה "}, {"kind": "math", "text": "x=2"}, {"kind": "he", "text": " מקביל לציר "}, {"kind": "math", "text": "x"}, {"kind": "he", "text": ". מצאו את "}, {"kind": "math", "text": "a"}, {"kind": "he", "text": "."}], "formula": null, "workspace_lines": 2},
+                {"number": 5, "parts": [{"kind": "he", "text": "הציבו את ערך הפרמטר ומצאו את נקודות הקיצון."}], "formula": null, "workspace_lines": 2},
+                {"number": 6, "parts": [{"kind": "he", "text": "חשבו את שיפוע המשיק בנקודה שבה "}, {"kind": "math", "text": "x=4"}, {"kind": "he", "text": " וקבעו אם הוא חיובי או שלילי."}], "formula": null, "workspace_lines": 2}
+              ]
+            }
           ]
         }
       ]
